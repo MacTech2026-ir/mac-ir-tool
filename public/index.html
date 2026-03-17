@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>MAC — IR Parts & Manuals</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d1117;--s1:#161b22;--s2:#1c2330;--s3:#21293a;
+  --b1:#2a3550;--b2:#3a4f6e;
+  --red:#e63329;--red2:#ff4f45;--red-d:rgba(230,51,41,0.12);
+  --tx:#e6edf3;--tx2:#8b949e;--tx3:#484f58;
+  --green:#3fb950;--green-d:rgba(63,185,80,0.12);
+  --blue:#58a6ff;--blue-d:rgba(88,166,255,0.12);
+  --amber:#d29922;--amber-d:rgba(210,153,34,0.15);
+  --font-d:'Barlow Condensed',sans-serif;--font-b:'Barlow',sans-serif;--r:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--tx);font-family:var(--font-b);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.hdr{background:var(--s1);border-bottom:2px solid var(--red);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.hdr-l{display:flex;align-items:center;gap:12px;}
+.ir-badge{background:var(--red);color:#fff;font-family:var(--font-d);font-size:13px;font-weight:800;letter-spacing:1px;padding:5px 9px;border-radius:4px;}
+.hdr-title{font-family:var(--font-d);font-size:19px;font-weight:700;}
+.hdr-title span{color:var(--red);}
+.hdr-sub{font-size:10px;color:var(--tx3);font-family:var(--font-d);letter-spacing:1px;text-transform:uppercase;}
+.hdr-r{display:flex;align-items:center;gap:8px;}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--tx3);}
+.dot.on{background:var(--green);box-shadow:0 0 5px var(--green);animation:blink 2s infinite;}
+.dot.busy{background:var(--amber);animation:blink .8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hbtn{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:6px 12px;color:var(--tx2);font-family:var(--font-d);font-size:12px;font-weight:600;letter-spacing:.5px;cursor:pointer;transition:all .15s;}
+.hbtn:hover{border-color:var(--red);color:var(--red);}
+.hbtn.on{border-color:var(--green);color:var(--green);background:var(--green-d);}
+.hbtn.busy{border-color:var(--amber);color:var(--amber);background:var(--amber-d);}
+
+/* NAV TABS */
+.nav{background:var(--s1);border-bottom:1px solid var(--b1);padding:0 16px;display:flex;gap:0;overflow-x:auto;}
+.ntab{font-family:var(--font-d);font-size:13px;font-weight:600;letter-spacing:.5px;padding:12px 16px;color:var(--tx2);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;}
+.ntab:hover{color:var(--tx);}
+.ntab.act{color:var(--red2);border-bottom-color:var(--red);}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:calc(100vh - 98px);}
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);padding:14px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
+.main{padding:16px;overflow-y:auto;}
+
+/* Sidebar pieces */
+.slabel{font-family:var(--font-d);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin-bottom:5px;}
+.srch{position:relative;}
+.srch input{width:100%;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:8px 30px 8px 10px;color:var(--tx);font-family:var(--font-b);font-size:13px;outline:none;}
+.srch input:focus{border-color:var(--red);}
+.srch input::placeholder{color:var(--tx3);}
+.srch-icon{position:absolute;right:8px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px;pointer-events:none;}
+.fgrp{display:flex;flex-direction:column;gap:4px;}
+.fbtn{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:6px 10px;color:var(--tx2);font-size:12px;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;justify-content:space-between;}
+.fbtn:hover{border-color:var(--b2);color:var(--tx);}
+.fbtn.act{background:var(--red-d);border-color:var(--red);color:var(--red2);font-weight:600;}
+.fcnt{font-size:10px;background:rgba(255,255,255,.06);border-radius:8px;padding:1px 5px;}
+.sync-box{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px 12px;font-size:11px;color:var(--tx2);line-height:1.7;margin-top:auto;}
+.sync-box .sl{font-family:var(--font-d);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:4px;}
+.srow{display:flex;justify-content:space-between;}
+.sval{color:var(--tx);font-weight:500;}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.scard{background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:11px 13px;}
+.sc-l{font-size:10px;color:var(--tx3);font-family:var(--font-d);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
+.sc-v{font-family:var(--font-d);font-size:26px;font-weight:700;color:var(--red);line-height:1;}
+.sc-s{font-size:10px;color:var(--tx3);margin-top:2px;}
+
+/* Results bar */
+.rbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.rcnt{font-family:var(--font-d);font-size:12px;color:var(--tx2);}
+.sorts{display:flex;gap:4px;}
+.sbtn{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:4px 9px;color:var(--tx2);font-size:11px;cursor:pointer;transition:all .15s;}
+.sbtn:hover{color:var(--tx);}
+.sbtn.act{border-color:var(--red);color:var(--red2);}
+
+/* Cards */
+.cards{display:flex;flex-direction:column;gap:6px;}
+.card{background:var(--s1);border:1px solid var(--b1);border-left:3px solid transparent;border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .15s;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start;}
+.card:hover{border-color:var(--b2);border-left-color:var(--red);background:var(--s2);}
+.card.sel{border-color:var(--b2);border-left-color:var(--red);background:rgba(230,51,41,.04);}
+.card.manual-card{border-left-color:var(--blue);}
+.card.manual-card:hover,.card.manual-card.sel{border-left-color:var(--blue);background:rgba(88,166,255,.04);}
+.ctop{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-bottom:3px;}
+.cnum{font-family:var(--font-d);font-size:16px;font-weight:700;}
+.badge{font-family:var(--font-d);font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;}
+.bp{background:var(--red-d);color:var(--red2);border:1px solid rgba(230,51,41,.3);}
+.bm{background:var(--blue-d);color:var(--blue);border:1px solid rgba(88,166,255,.3);}
+.bq{background:rgba(88,166,255,.1);color:var(--blue);border:1px solid rgba(88,166,255,.2);}
+.cname{font-size:12px;color:var(--tx2);margin-bottom:4px;}
+.cspecs{display:flex;gap:6px;flex-wrap:wrap;}
+.sp{font-size:11px;color:var(--tx3);background:var(--s2);border:1px solid var(--b1);border-radius:3px;padding:2px 6px;font-family:var(--font-d);}
+.sp.hi{color:var(--red2);border-color:rgba(230,51,41,.3);}
+.sp.gr{color:var(--green);border-color:rgba(63,185,80,.3);}
+.cr{display:flex;flex-direction:column;align-items:flex-end;gap:4px;min-width:100px;}
+.pblock{text-align:right;}
+.plbl{font-size:10px;color:var(--tx3);font-family:var(--font-d);}
+.pval{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--tx);}
+.pval.g{color:var(--green);}
+.pna{color:var(--tx3);font-size:11px;}
+
+/* Detail panel */
+.detail{display:none;background:var(--s1);border:1px solid var(--b1);border-top:2px solid var(--red);border-radius:var(--r);padding:18px;margin-top:8px;animation:fi .2s ease;}
+.detail.show{display:block;}
+.detail.mshow{border-top-color:var(--blue);}
+@keyframes fi{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.dhdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--b1);}
+.dnum{font-family:var(--font-d);font-size:24px;font-weight:800;}
+.dname{font-size:12px;color:var(--tx2);margin-top:2px;}
+.xbtn{background:var(--s2);border:1px solid var(--b2);border-radius:4px;width:26px;height:26px;cursor:pointer;color:var(--tx2);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.xbtn:hover{background:var(--b2);color:var(--tx);}
+.dgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px;}
+.df{background:var(--s2);border-radius:var(--r);padding:9px 11px;}
+.dfl{font-size:10px;color:var(--tx3);font-family:var(--font-d);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:2px;}
+.dfv{font-size:13px;font-weight:500;color:var(--tx);}
+.dfv.r{color:var(--red2);font-family:var(--font-d);font-size:16px;font-weight:700;}
+.dfv.g{color:var(--green);font-family:var(--font-d);font-size:16px;font-weight:700;}
+.dfv.b{color:var(--blue);font-family:var(--font-d);font-size:15px;font-weight:700;}
+.dfv.a{color:var(--amber);font-family:var(--font-d);font-size:15px;font-weight:700;}
+.dsec{font-family:var(--font-d);font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--tx3);margin:12px 0 7px;}
+.xtbl{width:100%;border-collapse:collapse;}
+.xtbl th{background:var(--s2);font-family:var(--font-d);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);padding:6px 9px;text-align:left;border-bottom:1px solid var(--b1);}
+.xtbl td{padding:7px 9px;border-bottom:1px solid var(--b1);font-size:12px;}
+.xtbl tr:last-child td{border-bottom:none;}
+.xtbl tr:hover td{background:var(--s2);}
+.nbox{background:rgba(230,51,41,.05);border:1px solid rgba(230,51,41,.2);border-radius:var(--r);padding:9px 11px;font-size:12px;color:var(--tx2);margin-top:7px;line-height:1.6;}
+.nbox.bl{background:rgba(88,166,255,.05);border-color:rgba(88,166,255,.2);}
+.dacts{display:flex;gap:7px;margin-top:12px;flex-wrap:wrap;}
+.abtn{background:transparent;border:1px solid var(--b2);border-radius:var(--r);padding:5px 13px;font-size:11px;font-family:var(--font-d);font-weight:600;letter-spacing:.5px;cursor:pointer;transition:all .15s;}
+.abtn.r{color:var(--red2);border-color:rgba(230,51,41,.3);}
+.abtn.r:hover{background:var(--red-d);}
+.abtn.b{color:var(--blue);border-color:rgba(88,166,255,.3);}
+.abtn.b:hover{background:var(--blue-d);}
+.abtn.m{color:var(--tx2);}
+.abtn.m:hover{border-color:var(--b2);color:var(--tx);}
+.abtn.del{color:#f87171;border-color:rgba(248,113,113,.3);}
+.abtn.del:hover{background:rgba(248,113,113,.1);}
+
+/* PDF viewer */
+.pdf-viewer{width:100%;height:600px;border:none;border-radius:var(--r);background:var(--s2);margin-top:10px;}
+
+/* Upload zone */
+.upload-zone{border:2px dashed var(--b2);border-radius:var(--r);padding:30px;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:14px;}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--red);background:var(--red-d);}
+.uz-icon{font-size:32px;margin-bottom:8px;opacity:.5;}
+.uz-title{font-family:var(--font-d);font-size:15px;font-weight:600;margin-bottom:4px;}
+.uz-sub{font-size:12px;color:var(--tx2);}
+#fileInput{display:none;}
+
+/* Modals */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--b2);border-radius:10px;padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.modal-title{font-family:var(--font-d);font-size:20px;font-weight:800;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6;}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:12px;}
+.form-label{font-size:10px;color:var(--tx2);font-family:var(--font-d);letter-spacing:1px;text-transform:uppercase;}
+.form-input,.form-select,.form-textarea{background:var(--s2);border:1px solid var(--b2);border-radius:var(--r);padding:8px 11px;color:var(--tx);font-family:var(--font-b);font-size:13px;outline:none;transition:border-color .15s;width:100%;}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--red);}
+.form-textarea{resize:vertical;min-height:60px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+option{background:var(--s2);}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;}
+.btn-cancel{background:transparent;border:1px solid var(--b2);border-radius:var(--r);padding:8px 16px;color:var(--tx2);cursor:pointer;font-family:var(--font-b);}
+.btn-cancel:hover{color:var(--tx);}
+.btn-save{background:var(--red);border:none;border-radius:var(--r);padding:8px 20px;color:#fff;font-weight:700;font-family:var(--font-d);font-size:13px;letter-spacing:.5px;cursor:pointer;}
+.btn-save:hover{background:var(--red2);}
+
+/* Sync progress */
+.prog-log{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:10px;height:160px;overflow-y:auto;font-family:monospace;font-size:11px;color:var(--tx2);line-height:1.7;margin-bottom:12px;}
+.pok{color:var(--green)}.pwarn{color:var(--amber)}.pinfo{color:var(--blue)}.perr{color:var(--red2)}
+.pbar-wrap{background:var(--s2);border-radius:4px;height:5px;overflow:hidden;margin-bottom:10px;}
+.pbar{height:100%;background:var(--red);border-radius:4px;transition:width .4s;}
+.pstats{display:flex;gap:14px;font-size:11px;color:var(--tx3);margin-bottom:10px;}
+.pstats span{color:var(--tx2);font-weight:500;}
+
+/* Connect CTA */
+.cta{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:70px 20px;text-align:center;}
+.cta-icon{font-size:52px;margin-bottom:14px;opacity:.25;}
+.cta-title{font-family:var(--font-d);font-size:20px;font-weight:700;margin-bottom:6px;}
+.cta-sub{font-size:12px;color:var(--tx2);margin-bottom:20px;max-width:340px;line-height:1.6;}
+.cta-btn{background:var(--red);border:none;border-radius:var(--r);padding:10px 22px;color:#fff;font-weight:700;font-family:var(--font-d);font-size:14px;letter-spacing:.5px;cursor:pointer;}
+.cta-btn:hover{background:var(--red2);}
+
+/* Toast */
+.toast{position:fixed;bottom:16px;right:16px;background:var(--s2);border:1px solid var(--red);border-radius:var(--r);padding:8px 16px;font-size:12px;color:var(--red2);font-family:var(--font-d);font-weight:600;letter-spacing:.5px;z-index:999;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+/* Scrollbars */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+
+/* Mobile */
+@media(max-width:680px){
+  .layout{grid-template-columns:1fr;}
+  .sidebar{border-right:none;border-bottom:1px solid var(--b1);max-height:280px;}
+  .stats{grid-template-columns:1fr 1fr;}
+  .dgrid{grid-template-columns:1fr 1fr;}
+  .hdr-sub{display:none;}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hdr-l">
+    <div class="ir-badge">IR</div>
+    <div>
+      <div class="hdr-title">MAC <span>IR</span> Parts & Manuals</div>
+      <div class="hdr-sub">Michigan Air Compressor Tech LLC</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="dot" id="statusDot"></div>
+    <button class="hbtn" id="gmailBtn" onclick="openAuthModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 7 10-7"/></svg>
+      <span id="gmailBtnTxt">Connect Gmail</span>
+    </button>
+    <button class="hbtn" onclick="openAddModal()">+ Add Part</button>
+  </div>
+</header>
+
+<nav class="nav">
+  <div class="ntab act" onclick="setTab('parts',this)">Parts</div>
+  <div class="ntab" onclick="setTab('manuals',this)">Manuals</div>
+  <div class="ntab" onclick="setTab('upload',this)">Upload PDF</div>
+  <div class="ntab" onclick="setTab('sync',this)">Sync Status</div>
+</nav>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div>
+      <div class="slabel">Search</div>
+      <div class="srch">
+        <input type="text" id="searchInput" placeholder="Part #, description, model..." oninput="onSearch()">
+        <span class="srch-icon">⌕</span>
+      </div>
+    </div>
+    <div id="sideFilters"></div>
+    <div class="sync-box" id="syncBox">
+      <div class="sl">Database</div>
+      <div class="srow"><span>Last sync</span><span class="sval" id="sbLastSync">—</span></div>
+      <div class="srow"><span>Parts</span><span class="sval" id="sbParts">0</span></div>
+      <div class="srow"><span>Manuals</span><span class="sval" id="sbManuals">0</span></div>
+      <div class="srow"><span>With pricing</span><span class="sval" id="sbPriced">0</span></div>
+    </div>
+  </aside>
+
+  <main class="main" id="mainArea">
+    <!-- PARTS TAB -->
+    <div id="tabParts">
+      <div class="stats" id="statsRow"></div>
+      <div class="rbar">
+        <div class="rcnt" id="rcnt">Loading...</div>
+        <div class="sorts">
+          <button class="sbtn act" onclick="setSort('part_num',this)">Part #</button>
+          <button class="sbtn" onclick="setSort('list_price',this)">List $</button>
+          <button class="sbtn" onclick="setSort('category',this)">Category</button>
+          <button class="sbtn" onclick="setSort('date',this)">Date</button>
+        </div>
+      </div>
+      <div class="cards" id="partsCards"></div>
+      <div id="partDetail" class="detail"></div>
+    </div>
+
+    <!-- MANUALS TAB -->
+    <div id="tabManuals" style="display:none">
+      <div class="rbar">
+        <div class="rcnt" id="mrcnt">Loading...</div>
+      </div>
+      <div class="cards" id="manualsCards"></div>
+      <div id="manualDetail" class="detail"></div>
+    </div>
+
+    <!-- UPLOAD TAB -->
+    <div id="tabUpload" style="display:none">
+      <div style="max-width:560px">
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:6px;">Upload IR Manuals & Quote PDFs</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6;">Drop any IR PDF here — service manuals, quote proposals, parts lists. The tool extracts part numbers, descriptions, list price, and your cost automatically. Manuals are stored on the server so all technicians can view them.</div>
+        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFiles(event)">
+          <div class="uz-icon">📄</div>
+          <div class="uz-title">Drop PDFs here or click to browse</div>
+          <div class="uz-sub">Supports multiple files — manuals, CTS quotes, parts lists</div>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf" multiple onchange="uploadFiles(this.files)">
+        <div id="uploadResults"></div>
+      </div>
+    </div>
+
+    <!-- SYNC TAB -->
+    <div id="tabSync" style="display:none">
+      <div style="max-width:560px">
+        <div style="font-family:var(--font-d);font-size:16px;font-weight:700;margin-bottom:6px;">Gmail Sync — Ingersoll Rand</div>
+        <div style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.6;">Scans your <strong style="color:var(--tx)">Vendors/Ingersoll Rand</strong> Gmail label, downloads all PDF attachments (quote proposals, manuals), extracts every part number with list price and your cost, and stores everything in the app.</div>
+
+        <div id="syncAuthStatus" style="margin-bottom:14px;"></div>
+
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+          <button class="btn-save" id="syncStartBtn" onclick="startSync()">Start Gmail Sync</button>
+          <button class="btn-cancel" onclick="openAuthModal()">Re-connect Gmail</button>
+        </div>
+
+        <div class="pbar-wrap"><div class="pbar" id="syncPbar" style="width:0%"></div></div>
+        <div class="pstats">
+          <div>Scanned: <span id="pScanned">0</span></div>
+          <div>Parts: <span id="pParts">0</span></div>
+          <div>Manuals: <span id="pManuals">0</span></div>
+        </div>
+        <div class="prog-log" id="syncLog"></div>
+
+        <div style="font-family:var(--font-d);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--tx3);margin-bottom:8px;margin-top:16px;">Sync History</div>
+        <div id="syncHistory"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="overlay" id="authOverlay">
+  <div class="modal">
+    <div class="modal-title">Connect Gmail</div>
+    <div class="modal-sub">Authorizes read-only access to your Vendors/Ingersoll Rand label. Nothing is modified or sent. All techs use the synced data — only you need to connect Gmail.</div>
+    <div style="background:var(--amber-d);border:1px solid rgba(210,153,34,.3);border-radius:var(--r);padding:10px 12px;font-size:12px;color:var(--amber);margin-bottom:16px;line-height:1.6;">
+      ⚙ Requires <strong>GMAIL_CLIENT_ID</strong> and <strong>GMAIL_CLIENT_SECRET</strong> set in your Railway environment variables. See the setup guide below.
+    </div>
+    <div style="font-size:12px;color:var(--tx2);line-height:1.8;margin-bottom:16px;">
+      <strong style="color:var(--tx)">Setup (one time):</strong><br>
+      1. Go to <strong style="color:var(--blue)">console.cloud.google.com</strong><br>
+      2. Create project → Enable <strong>Gmail API</strong><br>
+      3. Credentials → OAuth 2.0 Client ID → Web Application<br>
+      4. Add your Railway URL as authorized redirect URI:<br>
+      <code style="background:var(--s2);padding:2px 6px;border-radius:3px;color:var(--green)">https://your-app.railway.app/auth/callback</code><br>
+      5. Copy Client ID + Secret → paste into Railway environment variables
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="document.getElementById('authOverlay').classList.remove('open')">Cancel</button>
+      <button class="btn-save" onclick="connectGmail()">Connect Gmail →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PART MODAL -->
+<div class="overlay" id="addOverlay">
+  <div class="modal">
+    <div class="modal-title" id="addModalTitle">Add Part Manually</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Part Number *</label>
+        <input class="form-input" id="fp_num" placeholder="e.g. 92622337">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="fp_cat">
+          <option value="">Select...</option>
+          <option>Filter</option><option>Value</option><option>Gasket / Seal</option>
+          <option>Belt</option><option>Motor</option><option>Pressure Switch</option>
+          <option>Pump / Head</option><option>Kit</option><option>Oil / Lubricant</option>
+          <option>Cooler</option><option>Bearing</option><option>Hose / Fitting</option><option>Part</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <input class="form-input" id="fp_name" placeholder="e.g. Air Filter Element — T30">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Model Series</label>
+        <select class="form-select" id="fp_series">
+          <option value="">Select...</option>
+          <option>RS-Series</option><option>T30</option><option>UP6/UP6S</option>
+          <option>SSR</option><option>R-Series</option><option>General</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Quote Ref (CTS-#)</label>
+        <input class="form-input" id="fp_quote" placeholder="e.g. CTS-473176">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">List Price ($)</label>
+        <input class="form-input" id="fp_list" type="number" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Your Cost ($)</label>
+        <input class="form-input" id="fp_cost" type="number" step="0.01" placeholder="0.00">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cross-Reference Part Numbers (comma separated)</label>
+      <input class="form-input" id="fp_xref" placeholder="e.g. 32170278, IR-92622337">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes</label>
+      <textarea class="form-textarea" id="fp_notes" placeholder="Compatible models, application info, install notes..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="btn-save" onclick="savePart()">Save Part</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let parts = [], manuals = [], filters = { categories:[], series:[], quotes:[] };
+let activeFilters = { category:null, series:null, quote:null };
+let sortBy = 'part_num', currentTab = 'parts', selectedPartId = null, selectedManualId = null;
+let editingId = null, syncPoller = null;
+
+// ── INIT ───────────────────────────────────────────────────────────────────
+async function init() {
+  await loadStats();
+  await loadFilters();
+  await loadParts();
+  await loadManuals();
+  checkAuthStatus();
+}
+
+async function api(path, opts={}) {
+  const res = await fetch(API + path, opts);
+  if (!res.ok) throw new Error(`API error ${res.status}`);
+  return res.json();
+}
+
+// ── STATS ──────────────────────────────────────────────────────────────────
+async function loadStats() {
+  try {
+    const s = await api('/api/stats');
+    document.getElementById('sbParts').textContent = s.parts;
+    document.getElementById('sbManuals').textContent = s.manuals;
+    document.getElementById('sbPriced').textContent = s.withPricing;
+    document.getElementById('sbLastSync').textContent = s.lastSync ? new Date(s.lastSync.started_at).toLocaleDateString() : '—';
+    renderStats(s);
+    updateGmailBtn(s.gmailConnected);
+  } catch(e) { console.error(e); }
+}
+
+function renderStats(s) {
+  document.getElementById('statsRow').innerHTML = `
+    <div class="scard"><div class="sc-l">IR Parts</div><div class="sc-v">${s.parts}</div><div class="sc-s">in database</div></div>
+    <div class="scard"><div class="sc-l">Manuals</div><div class="sc-v">${s.manuals}</div><div class="sc-s">stored on server</div></div>
+    <div class="scard"><div class="sc-l">Quotes</div><div class="sc-v">${s.quotes}</div><div class="sc-s">CTS references</div></div>
+    <div class="scard"><div class="sc-l">With Pricing</div><div class="sc-v">${s.withPricing}</div><div class="sc-s">list + cost</div></div>`;
+}
+
+// ── FILTERS ────────────────────────────────────────────────────────────────
+async function loadFilters() {
+  try {
+    filters = await api('/api/parts/meta/filters');
+    renderSideFilters();
+  } catch(e) {}
+}
+
+function renderSideFilters() {
+  const html = `
+    <div>
+      <div class="slabel">Series</div>
+      <div class="fgrp" id="seriesGrp">
+        <button class="fbtn act" onclick="setFilter('series',null,this)">All <span class="fcnt">${parts.length}</span></button>
+        ${filters.series.map(s => `<button class="fbtn" onclick="setFilter('series','${s}',this)">${s} <span class="fcnt">${parts.filter(p=>p.series===s).length}</span></button>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="slabel">Category</div>
+      <div class="fgrp" id="catGrp">
+        <button class="fbtn act" onclick="setFilter('category',null,this)">All <span class="fcnt">${parts.length}</span></button>
+        ${filters.categories.map(c => `<button class="fbtn" onclick="setFilter('category','${c}',this)">${c} <span class="fcnt">${parts.filter(p=>p.category===c).length}</span></button>`).join('')}
+      </div>
+    </div>
+    <div>
+      <div class="slabel">Quote Ref</div>
+      <div class="fgrp" id="quoteGrp">
+        <button class="fbtn act" onclick="setFilter('quote',null,this)">All <span class="fcnt">${parts.filter(p=>p.quote_num).length}</span></button>
+        ${filters.quotes.map(q => `<button class="fbtn" onclick="setFilter('quote','${q}',this)">${q} <span class="fcnt">${parts.filter(p=>p.quote_num===q).length}</span></button>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById('sideFilters').innerHTML = html;
+}
+
+function setFilter(key, val, btn) {
+  activeFilters[key] = val;
+  const map = {series:'seriesGrp', category:'catGrp', quote:'quoteGrp'};
+  const grp = document.getElementById(map[key]);
+  if (grp) grp.querySelectorAll('.fbtn').forEach(b => b.classList.remove('act'));
+  btn.classList.add('act');
+  renderParts();
+}
+
+// ── PARTS ──────────────────────────────────────────────────────────────────
+async function loadParts() {
+  try {
+    parts = await api('/api/parts?limit=500');
+    renderParts();
+    renderSideFilters();
+  } catch(e) { document.getElementById('partsCards').innerHTML = '<div class="cta"><div class="cta-title">Could not load parts</div></div>'; }
+}
+
+function renderParts() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let filtered = parts.filter(p => {
+    if (activeFilters.series && p.series !== activeFilters.series) return false;
+    if (activeFilters.category && p.category !== activeFilters.category) return false;
+    if (activeFilters.quote && p.quote_num !== activeFilters.quote) return false;
+    if (q) {
+      const s = [p.part_num, p.name, p.category, p.series, p.quote_num, ...(p.xref||[]), p.notes].join(' ').toLowerCase();
+      if (!s.includes(q)) return false;
+    }
+    return true;
+  });
+
+  filtered.sort((a,b) => {
+    if (sortBy === 'part_num') return (a.part_num||'').localeCompare(b.part_num||'');
+    if (sortBy === 'list_price') return (b.list_price||0) - (a.list_price||0);
+    if (sortBy === 'category') return (a.category||'').localeCompare(b.category||'');
+    if (sortBy === 'date') return (b.date||'').localeCompare(a.date||'');
+    return 0;
+  });
+
+  document.getElementById('rcnt').textContent = `${filtered.length} of ${parts.length} parts`;
+
+  if (filtered.length === 0) {
+    document.getElementById('partsCards').innerHTML = `<div class="cta"><div class="cta-icon">⊘</div><div class="cta-title">${parts.length === 0 ? 'No parts yet' : 'No results'}</div><div class="cta-sub">${parts.length === 0 ? 'Connect Gmail or upload a PDF to get started.' : 'Try a different search or filter.'}</div>${parts.length === 0 ? '<button class="cta-btn" onclick="setTab(\'sync\',document.querySelector(\'.ntab:nth-child(4)\'))">Sync Gmail</button>' : ''}</div>`;
+    return;
+  }
+
+  document.getElementById('partsCards').innerHTML = filtered.map(p => {
+    const xrefs = (p.xref||[]).slice(0,3).map(x => `<span class="sp">${x}</span>`).join('');
+    const priceHtml = p.list_price
+      ? `<div class="pblock"><div><span class="plbl">LIST </span><span class="pval">$${p.list_price.toFixed(2)}</span></div>${p.your_cost?`<div><span class="plbl">COST </span><span class="pval g">$${p.your_cost.toFixed(2)}</span></div>`:''}</div>`
+      : `<span class="pna">No price</span>`;
+
+    return `<div class="card ${selectedPartId===p.id?'sel':''}" id="pc-${p.id}" onclick="selectPart('${p.id}')">
+      <div>
+        <div class="ctop">
+          <span class="cnum">${p.part_num}</span>
+          <span class="badge bp">IR Part</span>
+          ${p.quote_num?`<span class="badge bq">${p.quote_num}</span>`:''}
+        </div>
+        <div class="cname">${p.name||'Ingersoll Rand Part'}</div>
+        <div class="cspecs">
+          ${p.series?`<span class="sp hi">${p.series}</span>`:''}
+          ${p.category?`<span class="sp">${p.category}</span>`:''}
+          ${p.date?`<span class="sp">${p.date}</span>`:''}
+          ${xrefs}
+        </div>
+      </div>
+      <div class="cr">${priceHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectPart(id) {
+  if (selectedPartId === id) { selectedPartId = null; document.getElementById('partDetail').classList.remove('show'); renderParts(); return; }
+  selectedPartId = id;
+  renderParts();
+  const p = parts.find(x => x.id === id);
+  if (!p) return;
+  const margin = p.list_price && p.your_cost ? ((p.list_price - p.your_cost) / p.list_price * 100).toFixed(1) : null;
+  const xrefRows = (p.xref||[]).map(x => `<tr><td style="font-family:var(--font-d);font-weight:700">${x}</td><td style="color:var(--tx3)">Alternate / Superseded</td></tr>`).join('');
+
+  const panel = document.getElementById('partDetail');
+  panel.className = 'detail show';
+  panel.innerHTML = `
+    <div class="dhdr">
+      <div><div class="dnum">${p.part_num}</div><div class="dname">${p.name||''}</div></div>
+      <button class="xbtn" onclick="selectPart('${p.id}')">✕</button>
+    </div>
+    <div class="dgrid">
+      <div class="df"><div class="dfl">List Price</div><div class="dfv r">${p.list_price?'$'+p.list_price.toFixed(2):'—'}</div></div>
+      <div class="df"><div class="dfl">Your Cost</div><div class="dfv g">${p.your_cost?'$'+p.your_cost.toFixed(2):'—'}</div></div>
+      <div class="df"><div class="dfl">Margin</div><div class="dfv a">${margin?margin+'%':'—'}</div></div>
+      <div class="df"><div class="dfl">Series</div><div class="dfv">${p.series||'—'}</div></div>
+      <div class="df"><div class="dfl">Category</div><div class="dfv">${p.category||'—'}</div></div>
+      <div class="df"><div class="dfl">Quote Ref</div><div class="dfv b">${p.quote_num||'—'}</div></div>
+    </div>
+    ${xrefRows?`<div class="dsec">Cross-References</div><table class="xtbl"><thead><tr><th>Part #</th><th>Notes</th></tr></thead><tbody>${xrefRows}</tbody></table>`:''}
+    ${p.notes?`<div class="dsec">Notes</div><div class="nbox">${p.notes}</div>`:''}
+    <div class="dacts">
+      <button class="abtn r" onclick="copyTxt('${p.part_num}')">Copy Part #</button>
+      ${p.quote_num?`<button class="abtn b" onclick="filterToQuote('${p.quote_num}')">All from ${p.quote_num}</button>`:''}
+      <button class="abtn m" onclick="openEditModal('${p.id}')">Edit</button>
+      <button class="abtn del" onclick="deletePart('${p.id}')">Remove</button>
+    </div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── MANUALS ─────────────────────────────────────────────────────────────────
+async function loadManuals() {
+  try {
+    manuals = await api('/api/manuals');
+    renderManuals();
+  } catch(e) {}
+}
+
+function renderManuals() {
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+  let filtered = manuals.filter(m => {
+    if (!q) return true;
+    const s = [m.title, ...(m.models||[]), m.source_subject||''].join(' ').toLowerCase();
+    return s.includes(q);
+  });
+
+  document.getElementById('mrcnt').textContent = `${filtered.length} of ${manuals.length} manuals`;
+
+  if (filtered.length === 0) {
+    document.getElementById('manualsCards').innerHTML = `<div class="cta"><div class="cta-icon">📖</div><div class="cta-title">${manuals.length===0?'No manuals yet':'No results'}</div><div class="cta-sub">${manuals.length===0?'Upload PDFs or sync Gmail to import IR service manuals.':''}</div>${manuals.length===0?'<button class="cta-btn" onclick="setTab(\'upload\',document.querySelector(\'.ntab:nth-child(3)\'))">Upload PDF</button>':''}</div>`;
+    return;
+  }
+
+  document.getElementById('manualsCards').innerHTML = filtered.map(m => {
+    const models = (m.models||[]).map(x => `<span class="sp">${x}</span>`).join('');
+    return `<div class="card manual-card ${selectedManualId===m.id?'sel':''}" id="mc-${m.id}" onclick="selectManual('${m.id}')">
+      <div>
+        <div class="ctop">
+          <span class="cnum" style="color:var(--blue);font-size:14px">${m.title.substring(0,55)}</span>
+          <span class="badge bm">Manual</span>
+        </div>
+        <div class="cname">${m.date||''} · ${m.pages||'?'} pages · ${m.file_size?(m.file_size/1024).toFixed(0)+'KB':''}</div>
+        <div class="cspecs">${models}</div>
+      </div>
+      <div class="cr"><span class="sp gr">Stored</span></div>
+    </div>`;
+  }).join('');
+}
+
+function selectManual(id) {
+  if (selectedManualId === id) { selectedManualId = null; document.getElementById('manualDetail').classList.remove('show'); renderManuals(); return; }
+  selectedManualId = id;
+  renderManuals();
+  const m = manuals.find(x => x.id === id);
+  if (!m) return;
+
+  const panel = document.getElementById('manualDetail');
+  panel.className = 'detail show mshow';
+  panel.innerHTML = `
+    <div class="dhdr">
+      <div><div class="dnum" style="color:var(--blue);font-size:18px">${m.title}</div><div class="dname">${m.date||''} · ${m.pages||'?'} pages · ${m.source_subject||''}</div></div>
+      <button class="xbtn" onclick="selectManual('${m.id}')">✕</button>
+    </div>
+    <div class="dgrid">
+      <div class="df"><div class="dfl">Models</div><div class="dfv b">${(m.models||[]).join(', ')||'—'}</div></div>
+      <div class="df"><div class="dfl">Pages</div><div class="dfv">${m.pages||'—'}</div></div>
+      <div class="df"><div class="dfl">File Size</div><div class="dfv">${m.file_size?(m.file_size/1024).toFixed(0)+' KB':'—'}</div></div>
+    </div>
+    <div class="dsec">Manual PDF</div>
+    <iframe class="pdf-viewer" src="${m.filepath}" title="${m.title}"></iframe>
+    <div class="dacts">
+      <a href="${m.filepath}" target="_blank"><button class="abtn b">Open Full Screen ↗</button></a>
+      <a href="${m.filepath}" download="${m.filename}"><button class="abtn m">Download PDF</button></a>
+      <button class="abtn del" onclick="deleteManual('${m.id}')">Remove</button>
+    </div>`;
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// ── UPLOAD ────────────────────────────────────────────────────────────────
+function dragOver(e) { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag'); }
+function dragLeave(e) { document.getElementById('uploadZone').classList.remove('drag'); }
+function dropFiles(e) { e.preventDefault(); dragLeave(e); uploadFiles(e.dataTransfer.files); }
+
+async function uploadFiles(files) {
+  if (!files || files.length === 0) return;
+  const resultsEl = document.getElementById('uploadResults');
+  resultsEl.innerHTML = `<div style="color:var(--amber);font-size:12px;margin-top:10px">⏳ Uploading ${files.length} file(s)...</div>`;
+
+  const formData = new FormData();
+  for (const f of files) formData.append('pdfs', f);
+
+  try {
+    const results = await fetch('/api/manuals/upload', { method: 'POST', body: formData }).then(r => r.json());
+    resultsEl.innerHTML = results.map(r => r.ok
+      ? `<div style="color:var(--green);font-size:12px;margin-top:6px">✓ ${r.title} — ${r.pages} pages, ${r.parts} parts extracted</div>`
+      : `<div style="color:var(--red2);font-size:12px;margin-top:6px">✗ ${r.filename}: ${r.error}</div>`
+    ).join('');
+    await loadParts(); await loadManuals(); await loadStats(); await loadFilters();
+    showToast(`Uploaded ${results.filter(r=>r.ok).length} file(s)`);
+  } catch(e) {
+    resultsEl.innerHTML = `<div style="color:var(--red2);font-size:12px;margin-top:10px">Upload failed: ${e.message}</div>`;
+  }
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────────────
+async function checkAuthStatus() {
+  try {
+    const s = await api('/api/auth/status');
+    updateGmailBtn(s.connected);
+    const el = document.getElementById('syncAuthStatus');
+    if (el) el.innerHTML = s.connected
+      ? `<div style="color:var(--green);font-size:12px">✓ Gmail connected — ready to sync</div>`
+      : `<div style="color:var(--amber);font-size:12px">⚠ Gmail not connected — click Connect Gmail to authorize</div>`;
+  } catch(e) {}
+}
+
+function updateGmailBtn(connected) {
+  const btn = document.getElementById('gmailBtn');
+  const txt = document.getElementById('gmailBtnTxt');
+  const dot = document.getElementById('statusDot');
+  if (connected) { btn.className='hbtn on'; txt.textContent='Gmail Connected'; dot.className='dot on'; }
+  else { btn.className='hbtn'; txt.textContent='Connect Gmail'; dot.className='dot'; }
+}
+
+function connectGmail() {
+  document.getElementById('authOverlay').classList.remove('open');
+  window.location.href = '/auth/gmail';
+}
+function openAuthModal() { document.getElementById('authOverlay').classList.add('open'); }
+
+async function startSync() {
+  document.getElementById('syncLog').innerHTML = '';
+  document.getElementById('syncPbar').style.width = '0%';
+  document.getElementById('syncStartBtn').disabled = true;
+  document.getElementById('syncStartBtn').textContent = 'Syncing...';
+
+  try {
+    await api('/api/sync/start', { method: 'POST' });
+    syncPoller = setInterval(pollSync, 1500);
+  } catch(e) {
+    showToast('Failed to start sync: ' + e.message);
+    document.getElementById('syncStartBtn').disabled = false;
+    document.getElementById('syncStartBtn').textContent = 'Start Gmail Sync';
+  }
+}
+
+async function pollSync() {
+  try {
+    const s = await api('/api/sync/status');
+    document.getElementById('syncPbar').style.width = s.progress.pct + '%';
+    document.getElementById('pScanned').textContent = s.progress.scanned;
+    document.getElementById('pParts').textContent = s.progress.parts;
+    document.getElementById('pManuals').textContent = s.progress.manuals;
+
+    const logEl = document.getElementById('syncLog');
+    logEl.innerHTML = '';
+    (s.recentLog || []).forEach(l => {
+      const d = document.createElement('div');
+      d.className = {ok:'pok',warn:'pwarn',info:'pinfo',err:'perr'}[l.type] || '';
+      d.textContent = l.msg;
+      logEl.appendChild(d);
+    });
+    logEl.scrollTop = logEl.scrollHeight;
+
+    if (!s.inProgress) {
+      clearInterval(syncPoller);
+      syncPoller = null;
+      document.getElementById('syncStartBtn').disabled = false;
+      document.getElementById('syncStartBtn').textContent = 'Start Gmail Sync';
+      await loadParts(); await loadManuals(); await loadStats(); await loadFilters();
+      showToast('Sync complete!');
+    }
+  } catch(e) { clearInterval(syncPoller); }
+}
+
+// ── PART CRUD ─────────────────────────────────────────────────────────────
+function openAddModal() { editingId = null; clearForm(); document.getElementById('addModalTitle').textContent='Add Part Manually'; document.getElementById('addOverlay').classList.add('open'); }
+function closeAddModal() { document.getElementById('addOverlay').classList.remove('open'); }
+
+function openEditModal(id) {
+  const p = parts.find(x => x.id === id);
+  if (!p) return;
+  editingId = id;
+  document.getElementById('addModalTitle').textContent = 'Edit Part';
+  document.getElementById('fp_num').value = p.part_num || '';
+  document.getElementById('fp_name').value = p.name || '';
+  document.getElementById('fp_cat').value = p.category || '';
+  document.getElementById('fp_series').value = p.series || '';
+  document.getElementById('fp_quote').value = p.quote_num || '';
+  document.getElementById('fp_list').value = p.list_price || '';
+  document.getElementById('fp_cost').value = p.your_cost || '';
+  document.getElementById('fp_xref').value = (p.xref||[]).join(', ');
+  document.getElementById('fp_notes').value = p.notes || '';
+  document.getElementById('addOverlay').classList.add('open');
+}
+
+function clearForm() {
+  ['fp_num','fp_name','fp_cat','fp_series','fp_quote','fp_list','fp_cost','fp_xref','fp_notes'].forEach(id => { document.getElementById(id).value=''; });
+}
+
+async function savePart() {
+  const num = document.getElementById('fp_num').value.trim();
+  if (!num) { showToast('Part number required'); return; }
+  const data = {
+    part_num: num,
+    name: document.getElementById('fp_name').value,
+    category: document.getElementById('fp_cat').value,
+    series: document.getElementById('fp_series').value,
+    quote_num: document.getElementById('fp_quote').value,
+    list_price: parseFloat(document.getElementById('fp_list').value)||null,
+    your_cost: parseFloat(document.getElementById('fp_cost').value)||null,
+    xref: document.getElementById('fp_xref').value.split(',').map(x=>x.trim()).filter(Boolean),
+    notes: document.getElementById('fp_notes').value,
+  };
+  try {
+    if (editingId) {
+      await api(`/api/parts/${editingId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    } else {
+      await api('/api/parts', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(data) });
+    }
+    closeAddModal();
+    await loadParts();
+    await loadFilters();
+    showToast(editingId ? 'Part updated!' : 'Part added!');
+  } catch(e) { showToast('Save failed: ' + e.message); }
+}
+
+async function deletePart(id) {
+  if (!confirm('Remove this part from the database?')) return;
+  await api(`/api/parts/${id}`, { method:'DELETE' });
+  selectedPartId = null;
+  document.getElementById('partDetail').classList.remove('show');
+  await loadParts();
+  showToast('Part removed');
+}
+
+async function deleteManual(id) {
+  if (!confirm('Delete this manual from the server? This cannot be undone.')) return;
+  await api(`/api/manuals/${id}`, { method:'DELETE' });
+  selectedManualId = null;
+  document.getElementById('manualDetail').classList.remove('show');
+  await loadManuals();
+  await loadStats();
+  showToast('Manual deleted');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────
+function setTab(name, btn) {
+  currentTab = name;
+  document.querySelectorAll('.ntab').forEach(t => t.classList.remove('act'));
+  btn.classList.add('act');
+  ['tabParts','tabManuals','tabUpload','tabSync'].forEach(id => document.getElementById(id).style.display='none');
+  document.getElementById({parts:'tabParts',manuals:'tabManuals',upload:'tabUpload',sync:'tabSync'}[name]).style.display='block';
+  if (name==='sync') checkAuthStatus();
+}
+
+function setSort(key, btn) { sortBy=key; document.querySelectorAll('.sbtn').forEach(b=>b.classList.remove('act')); btn.classList.add('act'); renderParts(); }
+function onSearch() { renderParts(); renderManuals(); }
+function filterToQuote(q) { activeFilters.quote=q; document.getElementById('searchInput').value=''; document.querySelectorAll('#quoteGrp .fbtn').forEach(b=>b.classList.remove('act')); renderParts(); }
+function copyTxt(t) { navigator.clipboard.writeText(t).catch(()=>{}); showToast('Copied: '+t); }
+
+let toastTimer;
+function showToast(msg) { const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2500); }
+
+// Handle auth redirect
+const params = new URLSearchParams(window.location.search);
+if (params.get('auth') === 'success') { showToast('Gmail connected!'); history.replaceState(null,'','/'); }
+if (params.get('auth') === 'error') { showToast('Gmail auth failed — check server config'); history.replaceState(null,'','/'); }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { document.querySelectorAll('.overlay').forEach(o=>o.classList.remove('open')); }
+  if ((e.ctrlKey||e.metaKey)&&e.key==='k') { e.preventDefault(); document.getElementById('searchInput').focus(); }
+});
+
+init();
+</script>
+</body>
+</html>
