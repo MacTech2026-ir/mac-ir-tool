@@ -214,7 +214,7 @@ function extractPartsFromText(text, quoteNum, date) {
   }
 
   // Supersession patterns
-  const superRe = /part\s*#?\s*(\d{7,0})\s+(?:has\s+)?super\w+\sÝto\s+part\s*#?\s*(\d{7,10})/gi;
+  const superRe = /part\s*#?\s*(\d{7,10})\s+(?:has\s+)?super\w+\s+to\s+part\s*#?\s*(\d{7,10})/gi;
   let sm;
   while ((sm = superRe.exec(text)) !== null) {
     const [, oldPn, newPn] = sm;
@@ -249,11 +249,11 @@ function inferCategory(desc) {
 
 function inferSeries(text) {
   const t = (text || '').toUpperCase();
-  if (/RS\s*9|RS\s*11|RS\s*7/.test(t)) return 'RS-Series';
+  if (/RS\s?9|RS\s?11|RS\s?7/.test(t)) return 'RS-Series';
   if (/T.?30/.test(t)) return 'T30';
-  if (/UP6S?/.test(t)) return 'UP6/UP6S ';
+  if (/UP6S?/.test(t)) return 'UP6/UP6S';
   if (/SSR/.test(t)) return 'SSR';
-  if (/R\s?SERIESROTARY SCEUÕ-Žtest(t)) return 'R-Series';
+  if (/R\s?SERIES|ROTARY SCREW/.test(t)) return 'R-Series';
   return 'General';
 }
 
@@ -272,7 +272,7 @@ app.get('/auth/gmail', (req, res) => {
   const clientId = process.env.GMAIL_CLIENT_ID;
   if (!clientId) return res.status(400).json({ error: 'GMAIL_CLIENT_ID not configured in environment' });
 
-  const redirectUri = process.env.GMAIL_REDIRECT_URI !||
+  const redirectUri = process.env.GMAIL_REDIRECT_URI ||
     `${req.protocol}://${req.get('host')}/auth/callback`;
 
   const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -297,4 +297,335 @@ app.get('/auth/callback', async (req, res) => {
     const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
       code,
       client_id: process.env.GMAIL_CLIENT_ID,
-      client_secret: process.env.GMAIL_CGWFƒ"ævöövÆV—2æ6öÒ÷Fö¶VârÂ°¢6öFRÀ¢6Æ–VçEö–C¢&ö6W72æVçbätÔ”Åô4Ä”TåEô”BÀ¢6Æ–VçE÷6V7&WC¢&ö6W72æVçbätÔ”Åô4Ä”TåEõ4T5$UBÀ¢&VF—&V7E÷W&“¢&VF—&V7EW&’À¢w&çE÷G—S¢vWF†÷&—¦F–öåö6öFRrÀ¢Ò“° ¢6öç7B²66W75÷Fö¶VâÂ&Vg&W6…÷Fö¶VâÂW‡—&W5ö–âÒÒFö¶Vå&W2æFF°¢6WE6WGF–ær‚vvÖ–Åö66W75÷Fö¶VârÂ66W75÷Fö¶Vâ“°¢6WE6WGF–ær‚vvÖ–Å÷&Vg&W6…÷Fö¶VârÂ&Vg&W6…÷Fö¶Vâ“°¢6WE6WGF–ær‚vvÖ–Å÷Fö¶VåöW‡—'’rÂ7G&–ær„FFRææ÷r‚’²†W‡—&W5ö–â¢’’“° ¢&W2ç&VF—&V7B‚róöWFƒ×7V66W72r“°¢Ò6F6‚†R’°¢6öç6öÆRæW'&÷"‚tôWF‚W'&÷#¢rÂRç&W7öç6SòæFFÇÂRæÖW76vR“°¢&W2ç&VF—&V7B‚róöWFƒÖW'&÷"r“°¢Ð§Ò“° ¦7–æ2gVæ7F–öâvWEfÆ–EFö¶Vâ‚’°¢ÆWBFö¶VâÒvWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr“°¢6öç7BW‡—'’Ò'6T–çB†vWE6WGF–ær‚vvÖ–Å÷Fö¶VåöW‡—'’r’ÇÂsr“°¢6öç7B&Vg&W6‚ÒvWE6WGF–ær‚vvÖ–Å÷&Vg&W6…÷Fö¶Vâr“° ¢–b‚Fö¶Vâ’F‡&÷ræWrW'&÷"‚tæ÷BWF†VçF–6FVBÒÒ6öææV7BvÖ–Âf—'7Br“°¢–b„FFRææ÷r‚’âW‡—'’Òcbb&Vg&W6‚’°¢6öç7B&W2Òv—B†–÷2ç÷7B‚v‡GG3¢òööWFƒ"ævöövÆV—2æ6öÒ÷Fö¶VârÂ°¢6Æ–VçEö–C¢&ö6W72æVçbätÔ”Åô4Ä”TåEô”BÀ¢6Æ–VçE÷6V7&WC¢&ö6W72æVçbätÔ”Åô4Ä”TåEõ4T5$UBÀ¢&Vg&W6…÷Fö¶Vã¢&Vg&W6‚À¢w&çE÷G—S¢w&Vg&W6…÷Fö¶VârÀ¢Ò“°¢Fö¶VâÒ&W2æFFæ66W75÷Fö¶Vã°¢6WE6WGF–ær‚vvÖ–Åö66W75÷Fö¶VârÂFö¶Vâ“°¢6WE6WGF–ær‚vvÖ–Å÷Fö¶VåöW‡—'’rÂ7G&–ær„FFRææ÷r‚’²‡&W2æFFæW‡—&W5ö–â¢’’“°¢Ð¢&WGW&âFö¶Vã°§Ð ¢òòÒÒtÔ”Â5”ä2ÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ¦ÆWB7–æ4–å&öw&W72ÒfÇ6S°¦ÆWB7–æ4ÆörÒµÓ°¦ÆWB7–æ5&öw&W72Ò²7C¢Â7V#¢rrÂ66ææVC¢Â'G3¢ÂÖçVÇ3¢Ó° ¦ævWB‚rö’÷7–æ2÷7FGW2rÂ‡&WÂ&W2’Óâ°¢6öç7BÆ7BÒF"ç&W&R‚u4TÄT5B¢e$ôÒ7–æ5öÆörõ$DU"%’–BDU42Ä”Ô•Br’ævWB‚“°¢&W2æ§6öâ‡°¢–å&öw&W73¢7–æ4–å&öw&W72À¢&öw&W73¢7–æ5&öw&W72À¢&V6VçDÆös¢7–æ4Æörç6Æ–6R‚Ó#’À¢Æ7E7–æ3¢Æ7BÇÂçVÆÂÀ¢vÖ–Ä6öææV7FVC¢vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr’À¢Ò“°§Ò“° ¦ç÷7B‚rö’÷7–æ2÷7F'BrÂ7–æ2‡&WÂ&W2’Óâ°¢–b‡7–æ4–å&öw&W72’&WGW&â&W2æ§6öâ‡²ö³¢fÇ6RÂÖW76vS¢u7–æ2Ç&VG’'Vææ–ærrÒ“°¢&W2æ§6öâ‡²ö³¢G'VRÂÖW76vS¢u7–æ27F'FVBrÒ“°¢'VävÖ–Å7–æ2‚’æ6F6‚†6öç6öÆRæW'&÷"“°§Ò“° ¦7–æ2gVæ7F–öâ'VävÖ–Å7–æ2‚’°¢7–æ4–å&öw&W72ÒG'VS°¢7–æ4ÆörÒµÓ°¢7–æ5&öw&W72Ò²7C¢Â7V#¢u7F'F–ærââârÂ66ææVC¢Â'G3¢ÂÖçVÇ3¢Ó°¢6öç7BÆöt–BÒF"ç&W&R‚t”å4U%B”åDò7–æ5öÆör‡7F'FVEöBÂ7FGW2’dÅTU2†FFWF–ÖR‚&æ÷r"’Â''Vææ–ær"’r’ç'Vâ‚’æÆ7D–ç6W'E&÷v–C° ¢6öç7BÆörÒ†×6rÂG—RÒv–æfòr’Óâ°¢7–æ4ÆörçW6‚‡²×6rÂG—RÂG3¢æWrFFR‚’çFô•4õ7G&–ær‚’Ò“°¢6öç6öÆRæÆör†µ5”ä5ÒG¶×6wÖ“°¢Ó° ¢G'’°¢6öç7BFö¶VâÒv—BvWEfÆ–EFö¶Vâ‚“°¢Æör‚tvÖ–Â6öææV7FVB´ôµÒrÂvö²r“° ¢òòf–æB•"Æ&VÀ¢7–æ5&öw&W72ç7V"Òtf–æF–ær–ævW'6öÆÂ&æBÆ&VÂâââs°¢6öç7BÆ&VÇ5&W2Òv—B†–÷2ævWB‚v‡GG3¢ò÷wwrævöövÆV—2æ6öÒövÖ–Â÷c÷W6W'2öÖRöÆ&VÇ2rÀ¢²†VFW'3¢²WF†÷&—¦F–öã¢&V&W"G·Fö¶VçÖÒÒ“° ¢6öç7B—$Æ&VÂÒÆ&VÇ5&W2æFFæÆ&VÇ2æf–æB†ÂÓà¢ÂææÖRÓÓÒufVæF÷'2ô–ævW'6öÆÂ&æBrÇÀ¢ÂææÖRçFôÆ÷vW$66R‚’æ–æ6ÇVFW2‚v–ævW'6öÆÂ&æBr¢“° ¢ÆWBVW'“°¢–b†—$Æ&VÂ’°¢Æör†f÷VæBÆ&VÃ¢"G¶—$Æ&VÂææÖWÒ"´ôµÖÂvö²r“°¢VW'’ÒÆ&VÃ¢G¶—$Æ&VÂæ–GÖ°¢ÒVÇ6R°¢Æör‚tÆ&VÂæ÷Bf÷VæBÒÒW6–ær¶W—v÷&B6V&6‚rÂwv&âr“°¢VW'’Òvg&öÓ¦–ævW'6öÆÇ&æBõ"7V&¦V7C¢„5E2’õ"7V&¦V7C¢†–ævW'6öÆÂ&æB’õ"7V&¦V7C¢„•"V÷FR’s°¢Ð ¢òòvWBÖW76vRÆ—7@¢7–æ5&öw&W72ç7V"ÒtÆöF–ærVÖ–ÂÆ—7Bâââs°¢ÆWBÖW76vW2ÒµÓ°¢ÆWBvUFö¶VâÒçVÆÃ°¢Fò°¢6öç7BW&ÂÒ‡GG3¢ò÷wwrævöövÆV—2æ6öÒövÖ–Â÷c÷W6W'2öÖRöÖW76vW3÷ÒG¶Væ6öFUU$”6ö×öæVçB‡VW'’—ÒfÖ…&W7VÇG3ÓG·vUFö¶VâòrgvUFö¶VãÒr²vUFö¶Vâ¢rwÖ°¢6öç7B&W2Òv—B†–÷2ævWB‡W&ÂÂ²†VFW'3¢²WF†÷&—¦F–öã¢&V&W"G·Fö¶VçÖÒÒ“°¢–b‡&W2æFFæÖW76vW2’ÖW76vW2ÒÖW76vW2æ6öæ6B‡&W2æFFæÖW76vW2“°¢vUFö¶VâÒ&W2æFFææW‡EvUFö¶Vã°¢Òv†–ÆR‡vUFö¶VâbbÖW76vW2æÆVæwF‚Â3“° ¢Æör†f÷VæBG¶ÖW76vW2æÆVæwF‡ÒVÖ–Ç2Fò66æÂvö²r“° ¢6öç7B–ç6W'E'BÒF"ç&W&R† ¢”å4U%Bõ"$UÄ4R”åDò'G2†–BÂ'EöçVÒÂæÖRÂ6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂV÷FUöçVÒÂFFRÂ‡&VbÂæ÷FW2Â6÷W&6UöVÖ–Åö–BÂWFFVEöB¢dÅTU2„–BÂ'EöçVÒÂæÖRÂ6FVv÷'’Â6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂwV÷FUöçVÒÂFFRÂ‡&VbÂæ÷FW2Â6÷W&6UöVÖ–Åö–BÂFFWF–ÖR‚væ÷rr’¢“°¢6öç7B–ç6W'DÖçVÂÒF"ç&W&R† ¢”å4U%Bõ"”täõ$R”åDòÖçVÇ2†–BÂF—FÆRÂÖöFVÇ2Âf–ÆVæÖRÂf–ÆWF‚Âf–ÆU÷6—¦RÂvW2Â6÷W&6UöVÖ–Åö–BÂ6÷W&6U÷7V&¦V7BÂFFR¢dÅTU2„–BÂF—FÆRÂÖöFVÇ2Âf–ÆVæÖRÂf–ÆWF‚Âf–ÆU÷6—¦RÂvW2Â6÷W&6UöVÖ–Åö–BÂ6÷W&6U÷7V&¦V7BÂFFR¢“° ¢f÷"†ÆWB’Ò²’ÂÖW76vW2æÆVæwFƒ²’²²’°¢7–æ5&öw&W72ç7BÒÖF‚ç&÷VæBƒ²†’òÖW76vW2æÆVæwF‚’¢ƒ“°¢7–æ5&öw&W72ç66ææVBÒ’²° ¢G'’°¢6öç7B×6u&W2Òv—B†–÷2ævWB€¢‡GG3¢ò÷wwrævöövÆV—2æ6öÒövÖ–Â÷c÷W6W'2öÖRöÖW76vW2òG¶ÖW76vW5¶•Òæ–GÓöf÷&ÖCÖgVÆÆÀ¢²†VFW'3¢²WF†÷&—¦F–öã¢&V&W"G·Fö¶VçÖÒÐ¢“°¢6öç7B×6rÒ×6u&W2æFF°¢6öç7B†VFW'2Ò×6rç–ÆöBæ†VFW'2ÇÂµÓ°¢6öç7BvWD‚ÒâÓâ††VFW'2æf–æB†‚Óâ‚ææÖRçFôÆ÷vW$66R‚’ÓÓÒâçFôÆ÷vW$66R‚’’ÇÂ·Ò’çfÇVRÇÂrs°¢6öç7B7V&¦V7BÒvWD‚‚u7V&¦V7Br“°¢6öç7BFFRÒvWD‚‚tFFRr“°¢6öç7B'6VDFFRÒ‚‚’Óâ²G'’²&WGW&âæWrFFR†FFR’çFô•4õ7G&–ær‚’ç7Æ—B‚uBr•³Ó²Ò6F6‚†R’²&WGW&ârs²ÒÒ’‚“° ¢òòW‡G&7B&öG’FW‡@¢ÆWB&öG•FW‡BÒrs°¢6öç7BvÆµ'G2Ò'BÓâ°¢–b‚'B’&WGW&ã°¢–b‡'BæÖ–ÖUG—RÓÓÒwFW‡B÷Æ–ârbb'Bæ&öG“òæFF’°¢&öG•FW‡B³Ò'VffW"æg&öÒ‡'Bæ&öG’æFFÂv&6ScBr’çFõ7G&–ær‚wWFc‚r“°¢ÒVÇ6R–b‡'BæÖ–ÖUG—RÓÓÒwFW‡Bö‡FÖÂrbb'Bæ&öG“òæFFbb&öG•FW‡B’°¢6öç7B‡FÖÂÒ'VffW"æg&öÒ‡'Bæ&öG’æFFÂv&6ScBr’çFõ7G&–ær‚wWFc‚r“°¢&öG•FW‡B³Ò‡FÖÂç&WÆ6R‚óÅµãåÒ³âörÂrr’ç&WÆ6R‚õÇ2²örÂrr“°¢Ð¢–b‡'Bç'G2’'Bç'G2æf÷$V6‚‡vÆµ'G2“°¢Ó°¢vÆµ'G2†×6rç–ÆöB“° ¢6öç7BgVÆÅFW‡BÒ7V&¦V7B²rr²&öG•FW‡C°¢6öç7B—4ÖçVÂÒöÖçVÇÇ6W'f–6RwV–FWÄ”ô×Æ–ç7FÆÆF–öââ¦÷W&F–öçÆ÷W&F–öââ¦ÖçVÂö’çFW7B†gVÆÅFW‡B“°¢6öç7B—5V÷FRÒô5E2ÕÆB·ÇV÷FWÇ&÷÷6ÇÇ'EÇ2¦çVÖ&W'Ç'EÇ2¢7ÅÆG³‚ÃÒö’çFW7B†gVÆÅFW‡B“°¢6öç7B7G4ÖF6‚ÒgVÆÅFW‡BæÖF6‚‚ô5E2Ò…ÆB²’ö’“°¢6öç7BV÷FTçVÒÒ7G4ÖF6‚òt5E2Òr²7G4ÖF6…³Ò¢çVÆÃ° ¢òò&ö6W72GF6†ÖVçG0¢6öç7BvÆ´GF6†ÖVçG2Ò7–æ2‡'B’Óâ°¢–b‚'B’&WGW&ã°¢–b‡'Bæf–ÆVæÖRbb'Bæf–ÆVæÖRçFôÆ÷vW$66R‚’æVæG5v—F‚‚rçFbr’bb'Bæ&öG“òæGF6†ÖVçD–B’°¢G'’°¢6öç7BGE&W2Òv—B†–÷2ævWB€¢‡GG3¢ò÷wwrævöövÆV—2æ6öÒövÖ–Â÷c÷W6W'2öÖRöÖW76vW2òG¶ÖW76vW5¶•Òæ–GÒöGF6†ÖVçG2òG·'Bæ&öG’æGF6†ÖVçD–GÖÀ¢²†VFW'3¢²WF†÷&—¦F–öã¢&V&W"G·Fö¶VçÖÒÐ¢“°¢6öç7BFd'VffW"Ò'VffW"æg&öÒ†GE&W2æFFæFFÂv&6ScBr“°¢6öç7B6fTæÖRÒ'Bæf–ÆVæÖRç&WÆ6R‚õµæ×¤Õ£Ó’åÂÕõÒörÂuòr“°¢6öç7Bf–ÆVæÖRÒG´FFRææ÷r‚—ÕòG·6fTæÖWÖ°¢6öç7Bf–ÆWF‚ÒF‚æ¦ö–â…UÄôE5ôD•"Âf–ÆVæÖR“°¢g2çw&—FTf–ÆU7–æ2†f–ÆWF‚ÂFd'VffW"“° ¢òò'6RDbf÷"FW‡@¢ÆWBFeFW‡BÒrs°¢ÆWBvW2Ò°¢G'’°¢6öç7B'6VBÒv—BFe'6R‡Fd'VffW"“°¢FeFW‡BÒ'6VBçFW‡C°¢vW2Ò'6VBæçV×vW3°¢Ò6F6‚†R’·Ð ¢6öç7BÆÅFW‡BÒFeFW‡B²rr²gVÆÅFW‡C° ¢–b†—4ÖçVÂÇÂöÖçVÇÄ”ô×Ç6W'f–6RwV–FRö’çFW7B‡'Bæf–ÆVæÖR’’°¢6öç7BÖöFVÇ2ÒW‡G&7DÖöFVÇ4g&öÕFW‡B†ÆÅFW‡B“°¢6öç7BÖçVÄ–BÒÖçVÅòG¶ÖW76vW5¶•Òæ–GÕòG·'Bæ&öG’æGF6†ÖVçD–GÖ°¢–ç6W'DÖçVÂç'Vâ‡°¢–C¢ÖçVÄ–BÀ¢F—FÆS¢'Bæf–ÆVæÖRç&WÆ6R‚õòörÂrr’ç&WÆ6R‚õÂåÇr²BòÂrr’À¢ÖöFVÇ3¢¥4ôâç7G&–æv–g’†ÖöFVÇ2’À¢f–ÆVæÖRÀ¢f–ÆWFƒ¢÷WÆöG2òG¶f–ÆVæÖWÖÀ¢f–ÆU÷6—¦S¢Fd'VffW"æÆVæwF‚À¢vW2À¢6÷W&6UöVÖ–Åö–C¢ÖW76vW5¶•Òæ–BÀ¢6÷W&6U÷7V&¦V7C¢7V&¦V7BÀ¢FFS¢'6VDFFRÀ¢Ò“°¢7–æ5&öw&W72æÖçVÇ2²³°¢Æör†ÖçVÂ6fVC¢G·'Bæf–ÆVæÖWÖÂvö²r“°¢Ð ¢òòW‡G&7B'G2g&öÒDbFW‡@¢–b†—5V÷FRbbFeFW‡B’°¢6öç7BFe'G2ÒW‡G&7E'G4g&öÕFW‡B‡FeFW‡BÂV÷FTçVÒÂ'6VDFFR“°¢6öç7B–ç6W'DÖç’ÒF"çG&ç67F–öâ‚‚’Óâ°¢f÷"†6öç7BöbFe'G2’°¢–ç6W'E'Bç'Vâ‡²ââçÂ6÷W&6UöVÖ–Åö–C¢ÖW76vW5¶•Òæ–BÒ“°¢7–æ5&öw&W72ç'G2²³°¢Ð¢Ò“°¢–ç6W'DÖç’‚“°¢–b‡Fe'G2æÆVæwF‚â’Æör†´ôµÒG·V÷FTçVÒÇÂ'Bæf–ÆVæÖWÓ¢G·Fe'G2æÆVæwF‡Ò'G2g&öÒDfÂvö²r“°¢Ð¢Ò6F6‚†R’°¢Æör†µt$åÒ6÷VÆBæ÷BF÷væÆöBGF6†ÖVçBG·'Bæf–ÆVæÖWÓ¢G¶RæÖW76vWÖÂwv&âr“°¢Ð¢Ð¢–b‡'Bç'G2’f÷"†6öç7Böb'Bç'G2’v—BvÆ´GF6†ÖVçG2‡“°¢Ó°¢v—BvÆ´GF6†ÖVçG2†×6rç–ÆöB“° ¢òòÇ6òW‡G&7Bg&öÒVÖ–Â&öG¢–b†—5V÷FR’°¢6öç7B&öG•'G2ÒW‡G&7E'G4g&öÕFW‡B†&öG•FW‡BÂV÷FTçVÒÂ'6VDFFR“°¢6öç7B–ç6W'D&öG•'G2ÒF"çG&ç67F–öâ‚‚’Óâ°¢f÷"†6öç7Böb&öG•'G2’°¢–ç6W'E'Bç'Vâ‡²ââçÂ6÷W&6UöVÖ–Åö–C¢ÖW76vW5¶•Òæ–BÒ“°¢7–æ5&öw&W72ç'G2²³°¢Ð¢Ò“°¢–ç6W'D&öG•'G2‚“°¢Ð ¢Ò6F6‚†R’°¢Æör†µt$åÒW'&÷"öâVÖ–ÂG¶’²Ó¢G¶RæÖW76vWÖÂwv&âr“°¢Ð ¢òò&FRÆ–Ö—B6fWG¢–b†’RRÓÓÒ’v—BæWr&öÖ—6R‡"Óâ6WEF–ÖV÷WB‡"Â#’“°¢Ð ¢7–æ5&öw&W72ç7BÒ°¢7–æ5&öw&W72ç7V"Òu7–æ26ö×ÆWFRs°¢Æör†´ôµÒFöæRÒÒG·7–æ5&öw&W72ç'G7Ò'G2ÂG·7–æ5&öw&W72æÖçVÇ7ÒÖçVÇ2g&öÒG¶ÖW76vW2æÆVæwF‡ÒVÖ–Ç6Âvö²r“° ¢F"ç&W&R‚uUDDR7–æ5öÆör4UB6ö×ÆWFVEöCÖFFWF–ÖR‚&æ÷r"’ÂVÖ–Ç5÷66ææVCÓòÂ'G5öf÷VæCÓòÂÖçVÇ5öf÷VæCÓòÂ7FGW3Ò&6ö×ÆWFR"ÂÆösÓòt„U$R–CÓòr¢ç'Vâ†ÖW76vW2æÆVæwF‚Â7–æ5&öw&W72ç'G2Â7–æ5&öw&W72æÖçVÇ2Â¥4ôâç7G&–æv–g’‡7–æ4Æör’ÂÆöt–B“° ¢Ò6F6‚†R’°¢Æör†´U%%Ò7–æ2f–ÆVC¢G¶RæÖW76vWÖÂvW'"r“°¢F"ç&W&R‚uUDDR7–æ5öÆör4UB6ö×ÆWFVEöCÖFFWF–ÖR‚&æ÷r"’Â7FGW3Ò&W'&÷""ÂÆösÓòt„U$R–CÓòr¢ç'Vâ„¥4ôâç7G&–æv–g’‡7–æ4Æör’ÂÆöt–B“°¢Òf–æÆÇ’°¢7–æ4–å&öw&W72ÒfÇ6S°¢Ð§Ð ¢òòÒÒ’$õUDU2ÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ ¢òò7FG0¦ævWB‚rö’÷7FG2rÂ‡&WÂ&W2’Óâ°¢6öç7B'G2ÒF"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒ'G2r’ævWB‚’æ3°¢6öç7BÖçVÇ2ÒF"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒÖçVÇ2r’ævWB‚’æ3°¢6öç7Bv—F…&–6–ærÒF"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒ'G2t„U$RÆ—7E÷&–6R•2äõBåTÄÂäB–÷W%ö6÷7B•2äõBåTÄÂr’ævWB‚’æ3°¢6öç7BV÷FW2ÒF"ç&W&R‚%4TÄT5B4õTåB„D•5D”ä5BV÷FUöçVÒ’22e$ôÒ'G2t„U$RV÷FUöçVÒ•2äõBåTÄÂ"’ævWB‚’æ3°¢6öç7BÆ7E7–æ2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒ7–æ5öÆörõ$DU"%’–BDU42Ä”Ô•Br’ævWB‚“°¢&W2æ§6öâ‡²'G2ÂÖçVÇ2Âv—F…&–6–ærÂV÷FW2ÂÆ7E7–æ2ÂvÖ–Ä6öææV7FVC¢vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr’Ò“°§Ò“° ¢òò'G0¦ævWB‚rö’÷'G2rÂ‡&WÂ&W2’Óâ°¢6öç7B²Â6FVv÷'’Â6W&–W2ÂV÷FRÂ6÷'BÒw'EöçVÒrÂÆ–Ö—BÒ#Âöfg6WBÒÒÒ&WçVW'“°¢ÆWB7ÂÒu4TÄT5B¢e$ôÒ'G2t„U$RÓs°¢6öç7B&×2ÒµÓ°¢–b‡’²7Â³ÒräB‡'EöçVÒÄ”´Ròõ"æÖRÄ”´Ròõ"æ÷FW2Ä”´Ròõ"‡&VbÄ”´Rò’s²6öç7BÆ–¶RÒRG·ÒV²&×2çW6‚†Æ–¶RÆÆ–¶RÆÆ–¶RÆÆ–¶R“²Ð¢–b†6FVv÷'’’²7Â³ÒräB2u4TÄT5B4õTåB‚¢’22e$ôÒ'G2t„U$RÆ—7E÷&–6R•2äõBåTÄÂäB–÷W%ö6÷7B•2äõBåTÄÂr’ævWB‚’æ3°¢6öç7BV÷FW2ÒF"ç&W&R‚%4TÄT5B4õTåB„D•5D”ä5BV÷FUöçVÒ’22e$ôÒ'G2t„U$RV÷FUöçVÒ•2äõBåTÄÂ"’ævWB‚’æ3°¢6öç7BÆ7E7–æ2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒ7–æ5öÆörõ$DU"%’–BDU42Ä”Ô•Br’ævWB‚“°¢&W2æ§6öâ‡²'G2ÂÖçVÇ2Âv—F…&–6–ærÂV÷FW2ÂÆ7E7–æ2ÂvÖ–Ä6öææV7FVC¢vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr’Ò“°§Ò“° ¢òò'G0¦ævWB‚rö’÷'G2rÂ‡&WÂ&W2’Óâ°¢6öç7B²Â6FVv÷'’Â6W&–W2ÂV÷FRÂ6÷'BÒw'EöçVÒrÂÆ–Ö—BÒ#Âöfg6WBÒÒÒ&WçVW'“°¢ÆWB7ÂÒu4TÄT5B¢e$ôÒ'G2t„U$RÓs°¢6öç7B&×2ÒµÓ°¢–b‡’²7Â³ÒräB‡'EöçVÒÄ”´Ròõ"æÖRÄ”´Ròõ"æ÷FW2Ä”´Ròõ"‡&VbÄ”´Rò’s²6öç7BÆ–¶RÒRG·ÒV²&×2çW6‚†Æ–¶RÆÆ–¶RÆÆ–¶RÆÆ–¶R“²Ð¢–b†6FVv÷'’’²7Â³ÒräB6FVv÷'’Òòs²&×2çW6‚†6FVv÷'’“²Ð¢–b‡6W&–W2’²7Â³ÒräB6W&–W2Òòs²&×2çW6‚‡6W&–W2“²Ð¢–b‡V÷FR’²7Â³ÒräBV÷FUöçVÒÒòs²&×2çW6‚‡V÷FR“²Ð¢6öç7BÆÆ÷vVBÒ²w'EöçVÒrÂv6FVv÷'’rÂw6W&–W2rÂvÆ—7E÷&–6RrÂw–÷W%ö6÷7BrÂvFFRrÂvæÖRuÓ°¢7Â³Òõ$DU"%’G¶ÆÆ÷vVBæ–æ6ÇVFW2‡6÷'B’ò6÷'B¢w'EöçVÒwÒÄ”Ô•Bòôde4UBö°¢&×2çW6‚‡'6T–çB†Æ–Ö—B’Â'6T–çB†öfg6WB’“°¢6öç7B&÷w2ÒF"ç&W&R‡7Â’æÆÂ‚ââç&×2“°¢&W2æ§6öâ‡&÷w2æÖ‡"Óâ‡²ââç"Â‡&Vc¢¥4ôâç'6R‡"ç‡&VbÇÂuµÒr’Ò’’“°§Ò“° ¦ævWB‚rö’÷'G2ó¦–BrÂ‡&WÂ&W2’Óâ°¢6öç7B&÷rÒF"ç&W&R‚u4TÄT5B¢e$ôÒ'G2t„U$R–BÒòr’ævWB‡&Wç&×2æ–B“°¢–b‚&÷r’&WGW&â&W2ç7FGW2ƒCB’æ§6öâ‡²W'&÷#¢tæ÷Bf÷VæBrÒ“°¢&W2æ§6öâ‡²ââç&÷rÂ‡&Vc¢¥4ôâç'6R‡&÷rç‡&VbÇÂuµÒr’Ò“°§Ò“° ¦ç÷7B‚rö’÷'G2rÂ‡&WÂ&W2’Óâ°¢6öç7B²'EöçVÒÂæÖRÂ6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂV÷FUöçVÒÂæ÷FW2Â‡&VbÒÒ&Wæ&öG“°¢–b‚'EöçVÒ’&WGW&â&W2ç7FGW2ƒC’æ§6öâ‡²W'&÷#¢w'EöçVÒ&WV—&VBrÒ“°¢6öç7B–BÒÖçVÅòG·'EöçV×ÕòG´FFRææ÷r‚—Ö°¢F"ç&W&R†”å4U%Bõ"$UÄ4R”åDò'G2†–BÂ'EöçVÒÂæÖRÂ6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂV÷FUöçVÒÂæ÷FW2Â‡&VbÂ7WÆ–W"ÂWFFVEöB¢dÅTU2ƒòÂòÂòÂòÂòÂòÂòÂòÂòÂòÂt–ævW'6öÆÂ&æBrÂFFWF–ÖR‚væ÷rr’–¢ç'Vâ†–BÂ'EöçVÒÂæÖRÇÂrrÂ6FVv÷'’ÇÂrrÂ6W&–W2ÇÂrrÂÆ—7E÷&–6RÇÂçVÆÂÂ–÷W%ö6÷7BÇÂçVÆÂÂV÷FUöçVÒÇÂçVÆÂÂæ÷FW2ÇÂrrÂ¥4ôâç7G&–æv–g’‡‡&VbÇÂµÒ’“°¢&W2æ§6öâ‡²ö³¢G'VRÂ–BÒ“°§Ò“° ¦çWB‚rö’÷'G2ó¦–BrÂ‡&WÂ&W2’Óâ°¢6öç7B²æÖRÂ6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂæ÷FW2Â‡&VbÒÒ&Wæ&öG“°¢F"ç&W&R‚uUDDR'G24UBæÖSÓòÂ6FVv÷'“ÓòÂ6W&–W3ÓòÂÆ—7E÷&–6SÓòÂ–÷W%ö6÷7CÓòÂæ÷FW3ÓòÂ‡&VcÓòÂWFFVEöCÖFFWF–ÖR‚&æ÷r"’t„U$R–CÓòr¢ç'Vâ†æÖRÂ6FVv÷'’Â6W&–W2ÂÆ—7E÷&–6RÂ–÷W%ö6÷7BÂæ÷FW2Â¥4ôâç7G&–æv–g’‡‡&VbÇÂµÒ’Â&Wç&×2æ–B“°¢&W2æ§6öâ‡²ö³¢G'VRÒ“°§Ò“° ¦æFVÆWFR‚rö’÷'G2ó¦–BrÂ‡&WÂ&W2’Óâ°¢F"ç&W&R‚tDTÄUDRe$ôÒ'G2t„U$R–BÒòr’ç'Vâ‡&Wç&×2æ–B“°¢&W2æ§6öâ‡²ö³¢G'VRÒ“°§Ò“° ¢òòf–ÇFW"÷F–öç0¦ævWB‚rö’÷'G2öÖWFöf–ÇFW'2rÂ‡&WÂ&W2’Óâ°¢6öç7B6FVv÷&–W2ÒF"ç&W&R‚u4TÄT5BD•5D”ä5B6FVv÷'’e$ôÒ'G2t„U$R6FVv÷'’Ò""õ$DU"%’6FVv÷'’r’æÆÂ‚’æÖ‡"Óâ"æ6FVv÷'’“°¢6öç7B6W&–W2ÒF"ç&W&R‚u4TÄT5BD•5D”ä5B6W&–W2e$ôÒ'G2t„U$R6W&–W2Ò""õ$DU"%’6W&–W2r’æÆÂ‚’æÖ‡"Óâ"ç6W&–W2“°¢6öç7BV÷FW2ÒF"ç&W&R‚u4TÄT5BD•5D”ä5BV÷FUöçVÒe$ôÒ'G2t„U$RV÷FUöçVÒ•2äõBåTÄÂõ$DU"%’V÷FUöçVÒDU42Ä”Ô•B3r’æÆÂ‚’æÖ‡"Óâ"çV÷FUöçVÒ“°¢&W2æ§6öâ‡²6FVv÷&–W2Â6W&–W2ÂV÷FW2Ò“°§Ò“° ¢òòÖçVÇ0¦ævWB‚rö’öÖçVÇ2rÂ‡&WÂ&W2’Óâ°¢6öç7B²ÒÒ&WçVW'“°¢ÆWB7ÂÒu4TÄT5B¢e$ôÒÖçVÇ2t„U$RÓs°¢6öç7B&×2ÒµÓ°¢–b‡’²7Â³ÒräB‡F—FÆRÄ”´Ròõ"ÖöFVÇ2Ä”´Ròõ"6÷W&6U÷7V&¦V7BÄ”´Rò’s²6öç7BÆ–¶RÒRG·ÒV²&×2çW6‚†Æ–¶RÆÆ–¶RÆÆ–¶R“²Ð¢7Â³Òrõ$DU"%’FFRDU42Â7&VFVEöBDU42s°¢6öç7B&÷w2ÒF"ç&W&R‡7Â’æÆÂ‚ââç&×2“°¢&W2æ§6öâ‡&÷w2æÖ‡"Óâ‡²ââç"ÂÖöFVÇ3¢¥4ôâç'6R‡"æÖöFVÇ2ÇÂuµÒr’Ò’’“°§Ò“° ¦æFVÆWFR‚rö’öÖçVÇ2ó¦–BrÂ‡&WÂ&W2’Óâ°¢6öç7BÖçVÂÒF"ç&W&R‚u4TÄT5B¢e$ôÒÖçVÇ2t„U$R–BÒòr’ævWB‡&Wç&×2æ–B“°¢–b†ÖçVÂbbÖçVÂæf–ÆVæÖR’°¢6öç7BgÒF‚æ¦ö–â…UÄôE5ôD•"ÂÖçVÂæf–ÆVæÖR“°¢–b†g2æW†—7G57–æ2†g’’g2çVæÆ–æµ7–æ2†g“°¢Ð¢F"ç&W&R‚tDTÄUDRe$ôÒÖçVÇ2t„U$R–BÒòr’ç'Vâ‡&Wç&×2æ–B“°¢&W2æ§6öâ‡²ö³¢G'VRÒ“°§Ò“° ¢òòÖçVÂWÆöBVæGö–ç@¦ç÷7B‚rö’öÖçVÇ2÷WÆöBrÂWÆöBæ'&’‚wFg2rÂ#’Â7–æ2‡&WÂ&W2’Óâ°¢6öç7B&W7VÇG2ÒµÓ°¢f÷"†6öç7Bf–ÆRöb&Wæf–ÆW2ÇÂµÒ’°¢G'’°¢6öç7BFd'VffW"Òg2ç&VDf–ÆU7–æ2†f–ÆRçF‚“°¢ÆWBFeFW‡BÒrrÂvW2Ò°¢G'’²6öç7BÒv—BFe'6R‡Fd'VffW"“²FeFW‡BÒçFW‡C²vW2ÒæçV×vW3²Ò6F6‚†R’·Ð¢6öç7BÖöFVÇ2ÒW‡G&7DÖöFVÇ4g&öÕFW‡B‡FeFW‡B²rr²f–ÆRæ÷&–v–æÆæÖR“°¢6öç7BF—FÆRÒ‡&Wæ&öG’çF—FÆRÇÂf–ÆRæ÷&–v–æÆæÖR’ç&WÆ6R‚õÂåÇr²BòÂrr’ç&WÆ6R‚õòörÂrr“°¢6öç7B–BÒWÆöEòG´FFRææ÷r‚—ÕòG´ÖF‚ç&æFöÒ‚’çFõ7G&–ærƒ3b’ç6Æ–6Rƒ"—Ö°¢F"ç&W&R‚t”å4U%B”åDòÖçVÇ2†–BÂF—FÆRÂÖöFVÇ2Âf–ÆVæÖRÂf–ÆWF‚Âf–ÆU÷6—¦RÂvW2Â6÷W&6U÷7V&¦V7BÂFFRÂWÆöFVEö'’’dÅTU2ƒòÃòÃòÃòÃòÃòÃòÃòÆFFWF–ÖR‚&æ÷r"’Â&ÖçVÂ"’r¢ç'Vâ†–BÂF—FÆRÂ¥4ôâç7G&–æv–g’†ÖöFVÇ2’Âf–ÆRæf–ÆVæÖRÂ÷WÆöG2òG¶f–ÆRæf–ÆVæÖWÖÂf–ÆRç6—¦RÂvW2Âf–ÆRæ÷&–v–æÆæÖR“° ¢òòW‡G&7B'G2g&öÒWÆöFVBD`¢6öç7B'G2ÒW‡G&7E'G4g&öÕFW‡B‡FeFW‡BÂçVÆÂÂæWrFFR‚’çFô•4õ7G&–ær‚’ç7Æ—B‚uBr•³Ò“°¢6öç7B–ç2ÒF"çG&ç67F–öâ‚‚’Óâ°¢f÷"†6öç7Böb'G2’F"ç&W&R‚t”å4U%Bõ"”täõ$R”åDò'G2†–BÇ'EöçVÒÆæÖRÆ6FVv÷'’Ç6W&–W2ÆÆ—7E÷&–6RÇ–÷W%ö6÷7BÆæ÷FW2Ç‡&VbÇ7WÆ–W"’dÅTU2ƒòÃòÃòÃòÃòÃòÃòÃòÃòÃò’r’ç'Vâ‡æ–BÇç'EöçVÒÇææÖRÇæ6FVv÷'’Çç6W&–W2ÇæÆ—7E÷&–6RÇç–÷W%ö6÷7BÇææ÷FW2Çç‡&VbÂt–ævW'6öÆÂ&æBr“°¢Ò“°¢–ç2‚“°¢&W7VÇG2çW6‚‡²ö³¢G'VRÂ–BÂF—FÆRÂÖöFVÇ2Â'G3¢'G2æÆVæwF‚ÂvW2Ò“°¢Ò6F6‚†R’°¢&W7VÇG2çW6‚‡²ö³¢fÇ6RÂf–ÆVæÖS¢f–ÆRæ÷&–v–æÆæÖRÂW'&÷#¢RæÖW76vRÒ“°¢Ð¢Ð¢&W2æ§6öâ‡&W7VÇG2“°§Ò“° ¢òò6V&6‚7&÷72&÷F€¦ævWB‚rö’÷6V&6‚rÂ‡&WÂ&W2’Óâ°¢6öç7B²ÒÒ&WçVW'“°¢–b‚’&WGW&â&W2æ§6öâ‡²'G3¢µÒÂÖçVÇ3¢µÒÒ“°¢6öç7BÆ–¶RÒRG·ÒV°¢6öç7B'G2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒ'G2t„U$R'EöçVÒÄ”´Ròõ"æÖRÄ”´Ròõ"æ÷FW2Ä”´Ròõ"‡&VbÄ”´RòÄ”Ô•BSr’æÆÂ†Æ–¶RÆÆ–¶RÆÆ–¶RÆÆ–¶R¢æÖ‡"Óâ‡²ââç"Â‡&Vc¢¥4ôâç'6R‡"ç‡&VbÇÂuµÒr’Ò’“°¢6öç7BÖçVÇ2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒÖçVÇ2t„U$RF—FÆRÄ”´Ròõ"ÖöFVÇ2Ä”´Ròõ"6÷W&6U÷7V&¦V7BÄ”´RòÄ”Ô•B#r’æÆÂ†Æ–¶RÆÆ–¶RÆÆ–¶R¢æÖ‡"Óâ‡²ââç"ÂÖöFVÇ3¢¥4ôâç'6R‡"æÖöFVÇ2ÇÂuµÒr’Ò’“°¢&W2æ§6öâ‡²'G2ÂÖçVÇ2Ò“°§Ò“° ¢òòWF‚7FGW0¦ævWB‚rö’öWF‚÷7FGW2rÂ‡&WÂ&W2’Óâ°¢&W2æ§6öâ‡²6öææV7FVC¢vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr’ÂW‡—'“¢vWE6WGF–ær‚vvÖ–Å÷Fö¶VåöW‡—'’r’Ò“°§Ò“° ¦ç÷7B‚rö’öWF‚öF—66öææV7BrÂ‡&WÂ&W2’Óâ°¢F"ç&W&R‚$DTÄUDRe$ôÒ6WGF–æw2t„U$R¶W’”â‚vvÖ–Åö66W75÷Fö¶VârÂvvÖ–Å÷&Vg&W6…÷Fö¶VârÂvvÖ–Å÷Fö¶VåöW‡—'’r’"’ç'Vâ‚“°¢&W2æ§6öâ‡²ö³¢G'VRÒ“°§Ò“° ¢òòÒÒ5D%BÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ¦æÆ—7FVâ…õ%BÂ‚’Óâ°¢6öç6öÆRæÆör†ÆâÔ2•"'G2FööÂ'Vææ–æröâ‡GG¢òöÆö6Æ†÷7C¢Gµõ%GÖ“°¢6öç6öÆRæÆör†vÖ–Â6öææV7FVC¢G²vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr—Ö“°¢6öç6öÆRæÆör†'G2–âD#¢G¶F"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒ'G2r’ævWB‚’æ7Ö“°¢6öç6öÆRæÆör†ÖçVÇ2–âD#¢G¶F"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒÖçVÇ2r’ævWB‚’æ7ÕÆæ“°§Ò“° 
+      client_secret: process.env.GMAIL_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    });
+
+    const { access_token, refresh_token, expires_in } = tokenRes.data;
+    setSetting('gmail_access_token', access_token);
+    setSetting('gmail_refresh_token', refresh_token);
+    setSetting('gmail_token_expiry', String(Date.now() + (expires_in * 1000)));
+
+    res.redirect('/?auth=success');
+  } catch (e) {
+    console.error('OAuth error:', e.response?.data || e.message);
+    res.redirect('/?auth=error');
+  }
+});
+
+async function getValidToken() {
+  let token = getSetting('gmail_access_token');
+  const expiry = parseInt(getSetting('gmail_token_expiry') || '0');
+  const refresh = getSetting('gmail_refresh_token');
+
+  if (!token) throw new Error('Not authenticated -- connect Gmail first');
+  if (Date.now() > expiry - 60000 && refresh) {
+    const res = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.GMAIL_CLIENT_ID,
+      client_secret: process.env.GMAIL_CLIENT_SECRET,
+      refresh_token: refresh,
+      grant_type: 'refresh_token',
+    });
+    token = res.data.access_token;
+    setSetting('gmail_access_token', token);
+    setSetting('gmail_token_expiry', String(Date.now() + (res.data.expires_in * 1000)));
+  }
+  return token;
+}
+
+// -- GMAIL SYNC ------------------------------------------------------------
+let syncInProgress = false;
+let syncLog = [];
+let syncProgress = { pct: 0, sub: '', scanned: 0, parts: 0, manuals: 0 };
+
+app.get('/api/sync/status', (req, res) => {
+  const last = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
+  res.json({
+    inProgress: syncInProgress,
+    progress: syncProgress,
+    recentLog: syncLog.slice(-20),
+    lastSync: last || null,
+    gmailConnected: !!getSetting('gmail_access_token'),
+  });
+});
+
+app.post('/api/sync/start', async (req, res) => {
+  if (syncInProgress) return res.json({ ok: false, message: 'Sync already running' });
+  res.json({ ok: true, message: 'Sync started' });
+  runGmailSync().catch(console.error);
+});
+
+async function runGmailSync() {
+  syncInProgress = true;
+  syncLog = [];
+  syncProgress = { pct: 0, sub: 'Starting...', scanned: 0, parts: 0, manuals: 0 };
+  const logId = db.prepare('INSERT INTO sync_log (started_at, status) VALUES (datetime("now"), "running")').run().lastInsertRowid;
+
+  const log = (msg, type = 'info') => {
+    syncLog.push({ msg, type, ts: new Date().toISOString() });
+    console.log(`[SYNC] ${msg}`);
+  };
+
+  try {
+    const token = await getValidToken();
+    log('Gmail connected [OK]', 'ok');
+
+    // Find IR label
+    syncProgress.sub = 'Finding Ingersoll Rand label...';
+    const labelsRes = await axios.get('https://www.googleapis.com/gmail/v1/users/me/labels',
+      { headers: { Authorization: `Bearer ${token}` } });
+
+    const irLabel = labelsRes.data.labels.find(l =>
+      l.name === 'Vendors/Ingersoll Rand' ||
+      l.name.toLowerCase().includes('ingersoll rand')
+    );
+
+    let query;
+    if (irLabel) {
+      log(`Found label: "${irLabel.name}" [OK]`, 'ok');
+      query = `label:${irLabel.id}`;
+    } else {
+      log('Label not found -- using keyword search', 'warn');
+      query = 'from:ingersollrand OR subject:(CTS) OR subject:(ingersoll rand) OR subject:(IR quote)';
+    }
+
+    // Get message list
+    syncProgress.sub = 'Loading email list...';
+    let messages = [];
+    let pageToken = null;
+    do {
+      const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100${pageToken ? &&pageToken=' + pageToken : ''}`;
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.messages) messages = messages.concat(res.data.messages);
+      pageToken = res.data.nextPageToken;
+    } while (pageToken && messages.length < 300);
+
+    log(`Found ${messages.length} emails to scan`, 'ok');
+
+    const insertPart = db.prepare(`
+      INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, date, xref, notes, source_email_id, updated_at)
+      VALUES (@id, @part_num, @name, @category, @category, @series, @list_price, @your_cost, @guote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
+    `);
+    const insertManual = db.prepare(`
+      INSERT OR IGNORE INTO manuals (id, title, models, filename, filepath, file_size, pages, source_email_id, source_subject, date)
+      VALUES (@id, @title, @models, @filename, @filepath, @file_size, @pages, @source_email_id, @source_subject, @date)
+    `);
+
+    for (let i = 0; i < messages.length; i++) {
+      syncProgress.pct = Math.round(10 + (i / messages.length) * 80);
+      syncProgress.scanned = i + 1;
+      try {
+        const msgRes = await axios.get(
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}?format=full`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const msg = msgRes.data;
+        const headers = msg.payload.headers || [];
+        const getH = n => (headers.find(h => h.name.toLowerCase() === n.toLowerCase()) || {}).value || '';
+        const subject = getH('Subject');
+        const date = getH('Date');
+        const parsedDate = ((() => { try { return new Date(date).toISOString().split('T')[0]; } catch(e) { return ''; } })();
+        let bodyText = '';
+        const walkParts = part => {
+          if (!part) return;
+          if (part.mimeType === 'text/plain' && part.body?.data) {
+            bodyText += Buffer.from(part.body.data, 'base64').toString('utf8');
+          } else if (part.mimeType === 'text/html' && part.body?.data && !bodyText) {
+            const html = Buffer.from(part.body.data, 'base64').toString('utf8');
+            bodyText += html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+          }
+          if (part.parts) part.parts.forEach(walkParts);
+        };
+        walkParts(msg.payload);
+        const fullText = subject + ' ' + bodyText;
+        const isManual = /manual|service guide|IOM|installation.*operation|operation.*manual/i.test(fullText);
+        const isQuote = /CTS-\d+|quote|proposal|part\s*number|part\s*#|\d{8,10}/i.test(fullText);
+        const ctsMatch = fullText.match(/CTS-(\d+)/i);
+        const quoteNum = ctsMatch ? 'CTS-' + ctsMatch[1] : null;
+        const walkAttachments = async (part) => {
+          if (!part) return;
+          if (part.filename && part.filename.toLowerCase().endsWith('.pdf') && part.body?.attachmentId) {
+            try {
+              const attRes = await axios.get(
+                `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}/attachments/${part.body.attachmentId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              const pdfBuffer = Buffer.from(attRes.data.data, 'base64');
+              const safeName = part.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+              const filename = `${Date.now()}_${safeName}`;
+              const filepath = path.join(UPLOADS_DIR, filename);
+              fs.writeFileSync(filepath, pdfBuffer);
+              let pdfText = '', pages = 0;
+              try { const parsed = await pdfParse(pdfBuffer); pdfText = parsed.text; pages = parsed.numpages; } catch(e) {}
+              const allText = pdfText + ' ' + fullText;
+              if (isManual || /manual|IOM|service guide/i.test(part.filename)) {
+                const models = extractModelsFromText(allText);
+                const manualId = `manual_${messages[i].id}_${part.body.attachmentId}`;
+                insertManual.run({ id: manualId, title: part.filename.replace(/_/g, ' ').replace(/\.\w+$/, ''), models: JSON.stringify(models), filename, filepath: `/uploads/${filename}`, file_size: pdfBuffer.length, pages, source_email_id: messages[i].id, source_subject: subject, date: parsedDate });
+                syncProgress.manuals++;
+                log(` Manual saved: ${part.filename}`, 'ok');
+              }
+              if (isQuote && pdfText) {
+                const pdfParts = extractPartsFromText(pdfText, quoteNum, parsedDate);
+                db.transaction(() => { for (const p of pdfParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })();
+                if (pdfParts.length > 0) log(`[OK] ${quoteNum || part.filename}: ${pdfParts.length} parts from PDF`, 'ok');
+              }
+            } catch(e) { log(`[WARN] Could not download attachment ${part.filename}: ${e.message}`, 'warn'); }
+          }
+          if (part.parts) for (const p of part.parts) await walkAttachments(p);
+        };
+        await walkAttachments(msg.payload);
+        if (isQuote) { const bodyParts = extractPartsFromText(bodyText, quoteNum, parsedDate); db.transaction(() => { for (const p of bodyParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })(); }
+      } catch(e) { log(`[WARN] Error on email ${i + 1}: ${e.message}`, 'warn'); }
+      if (i % 5 === 0) await new Promise(r => setTimeout(r, 200));
+    }
+    syncProgress.pct = 100; syncProgress.sub = 'Sync complete!';
+    log(`[OK] Done -- ${syncProgress.parts} parts, ${syncProgress.manuals} manuals from ${messages.length} emails`, 'ok');
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), emails_scanned=?, parts_found=?, manuals_found=?, status="complete", log=? WHERE id=?').run(messages.length, syncProgress.parts, syncProgress.manuals, JSON.stringify(syncLog), logId);
+  } catch(e) {
+    log(`[ERR] Sync failed: ${e.message}`, 'err');
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), status="error", log=? WHERE id=?').run(JSON.stringify(syncLog), logId);
+  } finally { syncInProgress = false; }
+}
+
+// -- API ROUTES ------------------------------------------------------------
+app.get('/api/stats', (req, res) => {
+  const parts = db.prepare('SELECT COUNT(*) as c FROM parts').get().c;
+  const manuals = db.prepare('SELECT COUNT(*) as c FROM manuals').get().c;
+  const withPricing = db.prepare(''SELECT COUNT(*) as c FROM parts WHERE list_price IS NOT NULL AND your_cost IS NOT NULL').get().c;
+  const quotes = db.prepare("SELECT COUNT(DISTINCT quote_num) as c FROM parts WHERE quote_num IS NOT NULL").get().c;
+  const lastSync = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
+  res.json({ parts, manuals, withPricing, quotes, lastSync, gmailConnected: !!getSetting('gmail_access_token') });
+});
+
+// Parts
+app.get('/api/parts', (req, res) => {
+  const { q, category, series, quote, sort = 'part_num', limit = 200, offset = 0 } = req.query;
+  let sql = 'SELECT * FROM parts WHERE 1=1';
+  const params = [];
+  if (q) { sql += ' AND (part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ?)'; const like = `%${q}%`; params.push(like,like,like,like); }
+  if (category) { sql += ' AND category = ?'; params.push(category); }
+  if (series) { sql += ' AND series = ?'; params.push(series); }
+  if (quote) { sql += ' AND quote_num = ?'; params.push(quote); }
+  const allowed = ['part_num','category','series','list_price','your_cost','date','name'];
+  sql += ` ORDER BY ${allowed.includes(sort) ? sort : 'part_num'} LIMIT ? OFFSET ?`;
+  params.push(parseInt(limit), parseInt(offset));
+  const rows = db.prepare(sql).all(...params);
+  res.json(rows.map(r => ({ ...r, xref: JSON.parse(r.xref || '[]') })));
+});
+
+app.get('/api/parts/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM parts WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  res.json({ ...row, xref: JSON.parse(row.xref || '[]') });
+});
+
+app.post('/api/parts', (req, res) => {
+  const { part_num, name, category, series, list_price, your_cost, quote_num, notes, xref } = req.body;
+  if (!part_num) return res.status(400).json({ error: 'part_num required' });
+  const id = `manual_${part_num}_${Date.now()}`;
+  db.prepare(`INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, notes, xref, supplier, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Ingersoll Rand', datetime('now'))`)
+    .run(id, part_num, name || '', category || '', series || '', list_price || null, your_cost || null, quote_num || null, notes || '', JSON.stringify(xref || []));
+  res.json({ ok: true, id });
+});
+
+app.put('/api/parts/:id', (req, res) => {
+  const { name, category, series, list_price, your_cost, notes, xref } = req.body;
+  db.prepare('UPDATE parts SET name=?, category=?, series=?, list_price=?, your_cost=?, notes=?, xref=?, updated_at=datetime("now") WHERE id=?')
+    .run(name, category, series, list_price, your_cost, notes, JSON.stringify(xref || []), req.params.id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/parts/:id', (req, res) => {
+  db.prepare('DELETE FROM parts WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// Filter options
+app.get('/api/parts/meta/filters', (req, res) => {
+  const categories = db.prepare('SELECT DISTINCT category FROM parts WHERE category != "" ORDER BY category').all().map(r => r.category);
+  const series = db.prepare('SELECT DISTINCT series FROM parts WHERE series != "" ORDER BY series').all().map(r => r.series);
+  const quotes = db.prepare('SELECT DISTINCT quote_num FROM parts WHERE quote_num IS NOT NULL ORDER BY quote_num DESC LIMIT 30').all().map(r => r.quote_num);
+  res.json({ categories, series, quotes });
+});
+
+// Manuals
+app.get('/api/manuals', (req, res) => {
+  const { q } = req.query;
+  let sql = 'SELECT * FROM manuals WHERE 1=1';
+  const params = [];
+  if (q) { sql += ' AND (title LIKE ? OR models LIKE ? OR source_subject LIKE ?)'; const like = `%${q}%`; params.push(like,like,like); }
+  sql += ' ORDER BY date DESC, created_at DESC';
+  const rows = db.prepare(sql).all(...params);
+  res.json(rows.map(r => ({ ...r, models: JSON.parse(r.models || '[]') })));
+});
+
+app.delete('/api/manuals/:id', (req, res) => {
+  const manual = db.prepare('SELECT * FROM manuals WHERE id = ?').get(req.params.id);
+  if (manual && manual.filename) {
+    const fp = path.join(UPLOADS_DIR, manual.filename);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  }
+  db.prepare('DELETE FROM manuals WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// Manual upload endpoint
+app.post('/api/manuals/upload', upload.array('pdfs', 20), async (req, res) => {
+  const results = [];
+  for (const file of req.files || []) {
+    try {
+      const pdfBuffer = fs.readFileSync(file.path);
+      let pdfText = '', pages = 0;
+      try { const p = await pdfParse(pdfBuffer); pdfText = p.text; pages = p.numpages; } catch(e) {}
+      const models = extractModelsFromText(pdfText + ' ' + file.originalname);
+      const title = (req.body.title || file.originalname).replace(/\.\w+$/, '').replace(/_/g, ' ');
+      const id = `upload_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      db.prepare('INSERT INTO manuals (id, title, models, filename, filepath, file_size, pages, source_subject, date, uploaded_by) VALUES (?,?,?,?,?,?,?,?,datetime("now"),"manual")')
+        .run(id, title, JSON.stringify(models), file.filename, `/uploads/${file.filename}`, file.size, pages, file.originalname);
+
+      // Extract parts from uploaded PDF
+      const parts = extractPartsFromText(pdfText, null, new Date().toISOString().split('T')[0]);
+      const ins = db.transaction(() => {
+        for (const p of parts) db.prepare('INSERT OR IGNORE INTO parts (id,part_num,name,category,series,list_price,your_cost,notes,xref,supplier) VALUES (?,?,?,?,?,?,?,?,?,?)').run(p.id,p.part_num,p.name,p.category,p.series,p.list_price,p.your_cost,p.notes,p.xref,'Ingersoll Rand');
+      });
+      ins();
+      results.push({ ok: true, id, title, models, parts: parts.length, pages });
+    } catch(e) {
+      results.push({ ok: false, filename: file.originalname, error: e.message });
+    }
+  }
+  res.json(results);
+});
+
+// Search across both
+app.get('/api/search', (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.json({ parts: [], manuals: [] });
+  const like = `%${q}%`;
+  const parts = db.prepare('SELECT * FROM parts WHERE part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ? LIMIT 50').all(like,like,like,like)
+    .map(r => ({ ...r, xref: JSON.parse(r.xref || '[]') }));
+  const manuals = db.prepare('SELECT * FROM manuals WHERE title LIKE ? OR models LIKE ? OR source_subject LIKE ? LIMIT 20').all(like,like,like)
+    .map(r => ({ ...r, models: JSON.parse(r.models || '[]') }));
+  res.json({ parts, manuals });
+});
+
+// Auth status
+app.get('/api/auth/status', (req, res) => {
+  res.json({ connected: !!getSetting('gmail_access_token'), expiry: getSetting('gmail_token_expiry') });
+});
+
+app.post('/api/auth/disconnect', (req, res) => {
+  db.prepare("DELETE FROM settings WHERE key IN ('gmail_access_token','gmail_refresh_token','gmail_token_expiry')").run();
+  res.json({ ok: true });
+});
+
+// -- START -----------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`\n MAC IR Parts Tool running on http://localhost:${PORT}`);
+  console.log(`   Gmail connected: ${!!getSetting('gmail_access_token')}`);
+  console.log(`   Parts in DB: ${db.prepare('SELECT COUNT(*) as c FROM parts').get().c}`);
+  console.log(`   Manuals in DB: ${db.prepare('SELECT COUNT(*) as c FROM manuals').get().c}\n`);
+});
