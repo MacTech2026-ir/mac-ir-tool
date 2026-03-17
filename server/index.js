@@ -141,7 +141,7 @@ app.get('/logout', (req, res) => {
 // Auth guard - all routes below this require login
 app.use((req, res, next) => {
   if (!SITE_PASSWORD) return next();
-  if (['/login', '/logout', '/favicon.ico'].includes(req.path)) return next();
+  if (['/login', '/logout', '/favicon.ico', '/api/stats'].includes(req.path)) return next();
   const cookies = parseCookies(req);
   if (cookies[AUTH_COOKIE] === AUTH_TOKEN) return next();
   if (req.path.startsWith('/api/') || req.path.startsWith('/auth/'))
@@ -391,7 +391,7 @@ async function runGmailSync() {
     }
 
     // Get message list
-    syncProgress.sub = 'Loading email list...';
+    syncProgress&sub = 'Loading email list...';
     let messages = [];
     let pageToken = null;
     do {
