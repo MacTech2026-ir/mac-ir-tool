@@ -11,11 +11,13 @@ const Database = require('better-sqlite3');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// â”€â”€ DIRS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const DB_PATH = path.join(__dirname, '..', 'data', 'mac_ir.db');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 [UPLOADS_DIR, DATA_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
+// â”€â”€ DATABASE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const db = new Database(DB_PATH);
 db.exec(`
   CREATE TABLE IF NOT EXISTS parts (
@@ -68,11 +70,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_manuals_models ON manuals(models);
 `);
 
+// â”€â”€ MIDDLEWARE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use('/uploads', express.static(UPLOADS_DIR));
 
+// Multer for PDF uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOADS_DIR),
   filename: (req, file, cb) => {
@@ -84,6 +88,7 @@ const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFil
   cb(null, file.mimetype === 'application/pdf');
 }});
 
+// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -91,3 +96,418 @@ function getSetting(key) {
 function setSetting(key, value) {
   db.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)').run(key, value);
 }
+
+function extractPartsFromText(text, quoteNum, date) {
+  const parts = [];
+  const lines = text.split(/[\n\r]+/);
+
+  // Pattern: 8-10 digit IR part number with optional description and prices
+  const rowRe = /\b(\d{8,10})\b[^\d]*?([\d,]+\.?\d{0,2})[^\d]*([\d,]+\.?\d{0,2})?/g;
+
+  for (const line of lines) {
+    const pnMatch = line.match(/\b(\d{8,10})\b/);
+    if (!pnMatch) continue;
+    const pn = pnMatch[1];
+
+    // Extract description â€” text near the part number
+    const desc = line.replace(pn, '').replace(/[|\-â€“:$,\d\.]+/g, ' ').trim().replace(/\s+/g, ' ').substring(0, 100);
+
+    // Extract prices
+    const prices = [...line.matchAll(/\$?([\d,]+\.\d{2})/g)]
+      .map(m => parseFloat(m[1].replace(/,/g, '')))
+      .filter(p => p > 0.5 && p < 500000);
+
+    const listPrice = prices.length >= 2 ? Math.max(...prices) : (prices[0] || null);
+    const yourCost = prices.length >= 2 ? Math.min(...prices) : null;
+
+    if (pn.length >= 8) {
+      parts.push({
+        id: `ir_${pn}_${(quoteNum||'').replace(/\W/g,'')}`,
+        part_num: pn,
+        name: desc || 'Ingersoll Rand Part',
+        category: inferCategory(desc),
+        series: inferSeries(desc),
+        list_price: listPrice,
+        your_cost: yourCost,
+        quote_num: quoteNum || null,
+        date,
+        xref: '[]',
+        notes: quoteNum ? `From ${quoteNum}` : 'Manual upload',
+      });
+    }
+  }
+
+  // Supersession patterns
+  const superRe = /part\s*#?\s*(\d{7,10})\s+(?:has\s+)?super\w+\s+to\s+part\s*#?\s*(\d{7,10})/gi;
+  let sm;
+  while ((sm = superRe.exec(text)) !== null) {
+    const [, oldPn, newPn] = sm;
+    const existing = parts.find(p => p.part_num === newPn);
+    if (existing) {
+      const xref = JSON.parse(existing.xref || '[]');
+      xref.push(oldPn);
+      existing.xref = JSON.stringify([...new Set(xref)]);
+      existing.notes = (existing.notes || '') + ` Supersedes ${oldPn}.`;
+    }
+  }
+
+  return parts.slice(0, 40);
+}
+
+function inferCategory(desc) {
+  const d = (desc || '').toLowerCase();
+  if (/filter|element|separator|air filter/i.test(d)) return 'Filter';
+  if (/valve|inlet|check|unloader|discharge/i.test(d)) return 'Valve';
+  if (/gasket|seal|o.?ring/i.test(d)) return 'Gasket / Seal';
+  if (/belt/i.test(d)) return 'Belt';
+  if (/motor/i.test(d)) return 'Motor';
+  if (/switch|pressure switch/i.test(d)) return 'Pressure Switch';
+  if (/pump|piston|head|cylinder/i.test(d)) return 'Pump / Head';
+  if (/kit/i.test(d)) return 'Kit';
+  if (/oil|lubric/i.test(d)) return 'Oil / Lubricant';
+  if (/cooler|intercooler|aftercooler/i.test(d)) return 'Cooler';
+  if (/bearing/i.test(d)) return 'Bearing';
+  if (/hose|tube|fitting/i.test(d)) return 'Hose / Fitting';
+  return 'Part';
+}
+
+function inferSeries(text) {
+  const t = (text || '').toUpperCase();
+  if (/RS\s?9|RS\s?11|RS\s?7/.test(t)) return 'RS-Series';
+  if (/T.?30/.test(t)) return 'T30';
+  if (/UP6S?/.test(t)) return 'UP6/UP6S';
+  if (/SSR/.test(t)) return 'SSR';
+  if (/R\s?SERIES|ROTARY SCREW/.test(t)) return 'R-Series';
+  return 'General';
+}
+
+function extractModelsFromText(text) {
+  const patterns = [/RS\s?\d+[iA]?[-\s]?[A-Z]?\d*/g, /T-?30/g, /UP6S?[-\s]?\d*/g, /SSR[-\s]?\d+/g];
+  const models = [];
+  for (const p of patterns) {
+    const m = text.match(p);
+    if (m) models.push(...m.map(x => x.trim().toUpperCase()));
+  }
+  return [...new Set(models)].slice(0, 8);
+}
+
+// â”€â”€ GMAIL OAUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+app.get('/auth/gmail', (req, res) => {
+  const clientId = process.env.GMAIL_CLIENT_ID;
+  if (!clientId) return res.status(400).json({ error: 'GMAIL_CLIENT_ID not configured in environment' });
+
+  const redirectUri = process.env.GMAIL_REDIRECT_URI ||
+    `${req.protocol}://${req.get('host')}/auth/callback`;
+
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent('https://www.googleapis.com/auth/gmail.readonly')}` +
+    `&access_type=offline&prompt=consent` +
+    `&login_hint=ryuseim%40mactechnologies.net`;
+
+  res.redirect(url);
+});
+
+app.get('/auth/callback', async (req, res) => {
+  const { code } = req.query;
+  if (!code) return res.redirect('/?auth=error');
+
+  try {
+    const redirectUri = process.env.GMAIL_REDIRECT_URI ||
+      `${req.protocol}://${req.get('host')}/auth/callback`;
+
+    const tokenRes = await axios.post('https://oauth2.googleapis.com/token', {
+      code,
+      client_id: process.env.GMAIL_CLIENT_ID,
+      client_secret: process.env.GMAIL_CLIENT_SECRET,
+      redirect_uri: redirectUri,
+      grant_type: 'authorization_code',
+    });
+
+    const { access_token, refresh_token, expires_in } = tokenRes.data;
+    setSetting('gmail_access_token', access_token);
+    setSetting('gmail_refresh_token', refresh_token);
+    setSetting('gmail_token_expiry', String(Date.now() + (expires_in * 1000)));
+
+    res.redirect('/?auth=success');
+  } catch (e) {
+    console.error('OAuth error:', e.response?.data || e.message);
+    res.redirect('/?auth=error');
+  }
+});
+
+async function getValidToken() {
+  let token = getSetting('gmail_access_token');
+  const expiry = parseInt(getSetting('gmail_token_expiry') || '0');
+  const refresh = getSetting('gmail_refresh_token');
+
+  if (!token) throw new Error('Not authenticated â€” connect Gmail first');
+  if (Date.now() > expiry - 60000 && refresh) {
+    const res = await axios.post('https://oauth2.googleapis.com/token', {
+      client_id: process.env.GMAIL_CLIENT_ID,
+      client_secret: process.env.GMAIL_CLIENT_SECRET,
+      refresh_token: refresh,
+      grant_type: 'refresh_token',
+    });
+    token = res.data.access_token;
+    setSetting('gmail_access_token', token);
+    setSetting('gmail_token_expiry', String(Date.now() + (res.data.expires_in * 1000)));
+  }
+  return token;
+}
+// â”€â”€ GMAIL SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let syncInProgress = false;
+let syncLog = [];
+let syncProgress = { pct: 0, sub: '', scanned: 0, parts: 0, manuals: 0 };
+
+app.get('/api/sync/status', (req, res) => {
+  const last = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
+  res.json({
+    inProgress: syncInProgress,
+    progress: syncProgress,
+    recentLog: syncLog.slice(-20),
+    lastSync: last || null,
+    gmailConnected: !!getSetting('gmail_access_token'),
+  });
+});
+
+app.post('/api/sync/start', async (req, res) => {
+  if (syncInProgress) return res.json({ ok: false, message: 'Sync already running' });
+  res.json({ ok: true, message: 'Sync started' });
+  runGmailSync().catch(console.error);
+});
+
+async function runGmailSync() {
+  syncInProgress = true;
+  syncLog = [];
+  syncProgress = { pct: 0, sub: 'Starting...', scanned: 0, parts: 0, manuals: 0 };
+  const logId = db.prepare('INSERT INTO sync_log (started_at, status) VALUES (datetime("now"), "running")').run().lastInsertRowid;
+
+  const log = (msg, type = 'info') => {
+    syncLog.push({ msg, type, ts: new Date().toISOString() });
+    console.log(`[SYNC] ${msg}`);
+  };
+
+  try {
+    const token = await getValidToken();
+    log('Gmail connected âœ“', 'ok');
+
+    // Find IR label
+    syncProgress.sub = 'Finding Ingersoll Rand label...';
+    const labelsRes = await axios.get('https://www.googleapis.com/gmail/v1/users/me/labels',
+      { headers: { Authorization: `Bearer ${token}` } });
+
+    const irLabel = labelsRes.data.labels.find(l =>
+      l.name === 'Vendors/Ingersoll Rand' ||
+      l.name.toLowerCase().includes('ingersoll rand')
+    );
+
+    let query;
+    if (irLabel) {
+      log(`Found label: "${irLabel.name}" âœ“`, 'ok');
+      query = `label:${irLabel.id}`;
+    } else {
+      log('Label not found â€” using keyword search', 'warn');
+      query = 'from:ingersollrand OR subject:(CTS) OR subject:(ingersoll rand) OR subject:(IR quote)';
+    }
+
+    // Get message list
+    syncProgress.sub = 'Loading email list...';
+    let messages = [];
+    let pageToken = null;
+    do {
+      const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100${pageToken ? '&pageToken=' + pageToken : ''}`;
+      const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
+      if (res.data.messages) messages = messages.concat(res.data.messages);
+      pageToken = res.data.nextPageToken;
+    } while (pageToken && messages.length < 300);
+
+    log(`Found ${messages.length} emails to scan`, 'ok');
+
+    const insertPart = db.prepare(`
+      INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, date, xref, notes, source_email_id, updated_at)
+      VALUES (@id, @part_num, @name, @category, @esults, @list_price, @your_cost, @quote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
+    `);
+    const insertManual = db.prepare(`
+      INSERT OR IGNORE INTO manuals (id, title, models, filename, filepath, file_size, pages, source_email_id, source_subject, date)
+      VALUES (@id, @title, @models, @filename, @filepath, @file_size, @pages, @source_email_id, @source_subject, @date)
+    `);
+    for (let i = 0; i < messages.length; i++) {
+      syncProgress.pct = Math.round(10 + (i / messages.length) * 80);
+      syncProgress.scanned = i + 1;
+
+      try {
+        const msgRes = await axios.get(
+          `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}?format=full`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const msg = msgRes.data;
+        const headers = msg.payload.headers || [];
+        const getH = n => (headers.find(h => h.name.toLowerCase() === n.toLowerCase()) || {}).value || '';
+        const subject = getH('Subject');
+        const date = getH('Date');
+        const parsedDate = (() => { try { return new Date(date).toISOString().split('T')[0]; } catch(e) { return ''; } })();
+
+        let bodyText = '';
+        const walkParts = part => {
+          if (!part) return;
+          if (part.mimeType === 'text/plain' && part.body?.data) {
+            bodyText += Buffer.from(part.body.data, 'base64').toString('utf8');
+          } else if (part.mimeType === 'text/html' && part.body?.data && !bodyText) {
+            const html = Buffer.from(part.body.data, 'base64').toString('utf8');
+            bodyText += html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+          }
+          if (part.parts) part.parts.forEach(walkParts);
+        };
+        walkParts(msg.payload);
+
+        const fullText = subject + ' ' + bodyText;
+        const isManual = /manual|service guide|IOM|installation.*operation|operation.*manual/i.test(fullText);
+        const isQuote = /CTS-\d+|quote|proposal|part\s*number|part\s*#|\d{8,10}/i.test(fullText);
+        const ctsMatch = fullText.match(/CTS-(\d+)/i);
+        const quoteNum = ctsMatch ? 'CTS-' + ctsMatch[1] : null;
+
+        const walkAttachments = async (part) => {
+          if (!part) return;
+          if (part.filename && part.filename.toLowerCase().endsWith('.pdf') && part.body?.attachmentId) {
+            try {
+              const attRes = await axios.get(
+                `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}/attachments/${part.body.attachmentId}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              const pdfBuffer = Buffer.from(attRes.data.data, 'base64');
+              const safeName = part.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+              const filename = `${Date.now()}_${safeName}`;
+              const filepath = path.join(UPLOADS_DIR, filename);
+              fs.writeFileSync(filepath, pdfBuffer);
+
+              let pdfText = ''; let pages = 0;
+              try { const parsed = await pdfParse(pdfBuffer); pdfText = parsed.text; pages = parsed.numpages; } catch(e) {}
+
+              const allText = pdfText + ' ' + fullText;
+              if (isManual || /manual|IOM|service guide/i.test(part.filename)) {
+                const models = extractModelsFromText(allText);
+                insertManual.run({ id: `manual_${messages[i].id}_${part.body.attachmentId}`, title: part.filename.replace(/_/g,' ').replace(/\.\w+$/,''), models: JSON.stringify(models), filename, filepath: `/uploads/${filename}`, file_size: pdfBuffer.length, pages, source_email_id: messages[i].id, source_subject: subject, date: parsedDate });
+                syncProgress.manuals++; log(`ğŸ“– Manual saved: ${part.filename}`, 'ok');
+              }
+              if (isQuote && pdfText) {
+                const pdfParts = extractPartsFromText(pdfText, quoteNum, parsedDate);
+                db.transaction(() => { for (const p of pdfParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })();
+                if (pdfParts.length > 0) log(`âœ“ ${quoteNum||part.filename}: ${pdfParts.length} parts from PDF`, 'ok');
+              }
+            } catch(e) { log(`âš  Could not download ${part.filename}: ${e.message}`, 'warn'); }
+          }
+          if (part.parts) for (const p of part.parts) await walkAttachments(p);
+        };
+        await walkAttachments(msg.payload);
+        if (isQuote) { const bp = extractPartsFromText(bodyText, quoteNum, parsedDate); db.transaction(() => { for (const p of bp) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })(); }
+      } catch(e) { log(`âš  Error on email ${i+1}: ${e.message}`, 'warn'); }
+      if (i % 5 === 0) await new Promise(r => setTimeout(r, 200));
+    }
+
+    syncProgress.pct = 100; syncProgress.sub = 'Sync complete!';
+    log(`âœ… Done â€”  ${syncProgress.parts} parts, ${syncProgress.manuals} manuals from ${messages.length} emails`, 'ok');
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), emails_scanned=?, parts_found=?, manuals_found=?, status="complete", log=? WHERE id=?').run(messages.length, syncProgress.parts, syncProgress.manuals, JSON.stringify(syncLog), logId);
+  } catch(e) {
+    log(`âŒ Sync failed: ${e.message}`, 'err');
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), status="error", log=? WHERE id=?').run(JSON.stringify(syncLog), logId);
+  } finally { syncInProgress = false; }
+}
+// â”€â”€ API ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+app.get('/api/stats', (req, res) => {
+  const parts = db.prepare('SELECT COUNT(*) as c FROM parts').get().c;
+  const manuals = db.prepare('SELECT COUNT(*) as c FROM manuals').get().c;
+  const withPricing = db.prepare('SELECT COUNT(*) as c FROM parts WHERE list_price IS NOT NULL AND your_cost IS NOT NULL').get().c;
+  const quotes = db.prepare("SELECT COUNT(DISTINCT quote_num) as c FROM parts WHERE quote_num IS NOT NULL").get().c;
+  const lastSync = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
+  res.json({ parts, manuals, withPricing, quotes, lastSync, gmailConnected: !!getSetting('gmail_access_token') });
+});
+
+app.get('/api/parts', (req, res) => {
+  const { q, category, series, quote, sort = 'part_num', limit = 200, offset = 0 } = req.query;
+  let sql = 'SELECT * FROM parts WHERE 1=1';
+  const params = [];
+  if (q) { sql += ' AND (part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ?)'; const like = `%${q}%`; params.push(like,like,like,like); }
+  if (category) { sql += ' AND category = ?'; params.push(category); }
+  if (series) { sql += ' AND series = ?'; params.push(series); }
+  if (quote) { sql += ' AND quote_num = ?'; params.push(quote); }
+  const allowed = ['part_num','category','series','list_price','your_cost','date','name'];
+  sql += ` ORDER BY ${allowed.includes(sort) ? sort : 'part_num'} LIMIT ? OFFSET ?`;
+  params.push(parseInt(limit), parseInt(offset));
+  res.json(db.prepare(sql).all(...params).map(r => ({ ...r, xref: JSON.parse(r.xref || '[]') })));
+});
+
+app.get('/api/parts/:id', (req, res) => {
+  const row = db.prepare('SELECT * FROM parts WHERE id = ?').get(req.params.id);
+  if (!row) return res.status(404).json({ error: 'Not found' });
+  res.json({ ...row, xref: JSON.parse(row.xref || '[]') });
+});
+
+app.post('/api/parts', (req, res) => {
+  const { part_num, name, category, series, list_price, your_cost, quote_num, notes, xref } = req.body;
+  if (!part_num) return res.status(400).json({ error: 'part_num required' });
+  const id = `manual_${part_num}_${Date.now()}`;
+  db.prepare(`INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, notes, xref, supplier, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Ingersoll Rand', datetime('now'))`).run(id, part_num, name||'', category||'', series||'', list_price||null, your_cost||null, quote_num||null, notes||'', JSON.stringify(xref||[]));
+  res.json({ ok: true, id });
+});
+
+app.put('/api/parts/:id', (req, res) => {
+  const { name, category, series, list_price, your_cost, notes, xref } = req.body;
+  db.prepare('UPDATE parts SET name=?, category=?, series=?, list_price=?, your_cost=?, notes=?, xref=?, updated_at=datetime("now") WHERE id=?').run(name, category, series, list_price, your_cost, notes, JSON.stringify(xref||[]), req.params.id);
+  res.json({ ok: true });
+});
+
+app.delete('/api/parts/:id', (req, res) => {
+  db.prepare('DELETE FROM parts WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+app.get('/api/parts/meta/filters', (req, res) => {
+  res.json({
+    categories: db.prepare('SELECT DISTINCT category FROM parts WHERE category != "" ORDER BY category').all().map(r=>r.category),
+    series: db.prepare('SELECT DISTINCT series FROM parts WHERE series != "" ORDER BY series').all().map(r=>r.series),
+    quotes: db.prepare('SELECT DISTINCT quote_num FROM parts WHERE quote_num IS NOT NULL ORDER BY quote_num DESC LIMIT340').all().map(r=>r.quote_num),
+  });
+});
+
+app.get('/api/manuals', (req, res) => {
+  const { q } = req.query;
+  let sql = 'SELECT * FROM manuals WHERE 1=1';
+  const params = [];
+  if (q) { sql += ' AND (title LIKE ? OR models LIKE ? OR source_subject LIKE ?)'; const like = `%${q}%`; params.push(like,like,like); }
+  sql += ' ORDER BY date DESC, created_at DESC';
+  res.json(db.prepare(sql).all(...params).map(r => ({ ...r, models: JSON.parse(r.models||'[]') })));
+});
+
+app.delete('/api/manuals/:id', (req, res) => {
+  const manual = db.prepare('SELECT * FROM manuals WHERE id = ?').get(req.params.id);
+  if (manual&&manual.filename) { const fp=path.join(UPLOADS_DIR,manual.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); }
+  db.prepare('DELETE FROM manuals WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+app.post('/api/manuals/upload', upload.array('pdfs', 20), async (req, res) => {
+  const results = [];
+  for (const file of req.files||[]) {
+    try {
+      const buf = fs.readFileSync(file.path);
+      let pdfText='', pages=0;
+      try { const p=await pdfParse(buf); pdfText=p.text; pages=p.numpages; } catch(e){}
+      const models=extractModelsFromText(pdfText+' '+file.originalname);
+      const title=(req.body.title||file.originalname).replace(/\.\w+$/,'').replace(/_/g,' ');
+      const id=`upload_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      db.prepare('INSERT INTO manuals (id,title,models,filename,filepath,file_size,pages,source_subject,date,uploaded_by) VALUES (?,?,?,?,?,?,?,?,datetime("now"),"manual")').run(id,title,JSON.stringify(models),file.filename,`/uploads/${file.filename}`,file.size,pages,file.originalname);
+      const parts=extractPartsFromText(pdfText,null,new Date().toISOString().split('T')[0]);
+      db.transaction(()=>{forèconst p of parts) db.prepare('INSERT OR IGNORE INTO parts (id,part_num,name,category,series,list_price,your_cost,notes,xref,supplier) VALUES (?,?,?,?,?,?,?,?,?,?)').run(p.id,p.part_num,p.name,p.category,p.series,p.list_price,p.your_cost,p.notes,p.xref,'Ingersoll Rand');})();
+      results.push({ ok:true, id, title, models, parts:parts.length, pages });
+    } catch(e) { results.push({ ok:false, filename:file.originalname, error:e.message }); }
+  }
+  res.json(results);
+});
+
+app.get('/api/search', (req, res) => {
+  const { q } = req.query; if (!q) return res.json({ parts:[], manuals:[] });
+  const like=`%${q}%`;
+  res.json({ parts: db.prepare('SELECT * FROM parts WHERE part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ? LIMIT 50').all(like,like,like,like).map(r=>(yÈ±áÉ•˜é)M=8¹Á…ÉÍ”¡È¹áÉ•™ñğmtœ¥ô¤¤°µ…¹Õ…±Ìè‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!IÑ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ğ1%-€ü1%5%PÈĞÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”¤¹µ…À¡Èôø¡ì¸¸¹È±•µ½‘•±Ìé)M=8¹Á…ÉÍ”¡È¹µ½‘•±Íñğmtœ¥ô¤¤ô¤ì)ô¤ì()…ÁÀ¹•Ğ œ½…Á¤½…ÕÑ ½ÍÑ…ÑÕÌœ°€¡É•Ä°É•Ì¤€ôøìÉ•Ì¹©Í½¸¡ì½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤°•áÁ¥Éäè•ÑM•ÑÑ¥¹œ µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ô¤ìô¤ì)…ÁÀ¹Á½ÍĞ œ½…Á¤½…ÕÑ ½‘¥Í½¹¹•Ğœ°€¡É•Ä°É•Ì¤€ôøì‘ˆ¹ÁÉ•Á…É” ‰1QI=4Í•ÑÑ¥¹Ì]!I­•ä%8€ µ…¥±}…•ÍÍ}Ñ½­•¸œ°µ…¥±}É•™É•Í¡}Ñ½­•¸œ°µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ˆ¤¹ÉÕ¸ ¤ìÉ•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ìô¤ì()…ÁÀ¹±¥ÍÑ•¸¡A=IP°€ ¤€ôøì(€½¹Í½±”¹±½œ¡q»Â~RĞ5%HA…ÉÑÌQ½½°ÉÕ¹¹¥¹œ½¸¡ÑÑÀè¼½±½…±¡½ÍĞè‘íA=IQõ€¤ì(€½¹Í½±”¹±½œ¡€€€µ…¥°½¹¹•Ñ•è€‘ì„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¥õ€¤ì(€½¹Í½±”¹±½œ¡€€€A…ÉÑÌ¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ğ ¤¹õ€¤ì(€½¹Í½±”¹±½œ¡€€€5…¹Õ…±Ì¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ğ ¤¹õq¹€¤ì)ô¤ì(ô¤ì(€€€ô(€ô(€É•Ì¹©Í½¸¡É•ÍÕ±ÑÌ¤ì)ô¤ì((¼¼M•…É …É½ÍÌ‰½Ñ )…ÁÀ¹•Ğ œ½…Á¤½Í•…É œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍĞìÄô€ôÉ•Ä¹ÅÕ•Éäì(€¥˜€ …Ä¤É•ÑÕÉ¸É•Ì¹©Í½¸¡ìÁ…ÉÑÌèmt°µ…¹Õ…±Ìèmtô¤ì(€½¹ÍĞ±¥­”€ô€”‘íÅô•€ì(€½¹ÍĞÁ…ÉÑÌ€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4Á…ÉÑÌ]!IÁ…ÉÑ}¹Õ´1%-€ü=H¹…µ”1%-€ü=H¹½Ñ•Ì1%-€ü=HáÉ•˜1%-€ü1%5%P€ÔÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°áÉ•˜è)M=8¹Á…ÉÍ”¡È¹áÉ•˜ñğ€mtœ¤ô¤¤ì(€½¹ÍĞµ…¹Õ…±Ì€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!IÑ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ğ1%-€ü1%5%P€ÈÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°µ½‘•±Ìè)M=8¹Á…ÉÍ”¡È¹µ½‘•±Ìñğ€mtœ¤ô¤¤ì(€É•Ì¹©Í½¸¡ìÁ…ÉÑÌ°µ…¹Õ…±Ìô¤ì)ô¤ì((¼¼ÕÑ ÍÑ…ÑÕÌ)…ÁÀ¹•Ğ œ½…Á¤½…ÕÑ ½ÍÑ…ÑÕÌœ°€¡É•Ä°É•Ì¤€ôøì(€É•Ì¹©Í½¸¡ì½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤°•áÁ¥Éäè•ÑM•ÑÑ¥¹œ µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ô¤ì)ô¤ì()…ÁÀ¹Á½ÍĞ œ½…Á¤½…ÕÑ ½‘¥Í½¹¹•Ğœ°€¡É•Ä°É•Ì¤€ôøì(€‘ˆ¹ÁÉ•Á…É” ‰1QI=4Í•ÑÑ¥¹Ì]!I­•ä%8€ µ…¥±}…•ÍÍ}Ñ½­•¸œ°µ…¥±}É•™É•Í¡}Ñ½­•¸œ°µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ˆ¤¹ÉÕ¸ ¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì((¼¼ƒŠRŠR MQIPƒŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠR )…ÁÀ¹±¥ÍÑ•¸¡A=IP°€ ¤€ôøì(€½¹Í½±”¹±½œ¡q»Â~RĞ5%HA…ÉÑÌQ½½°ÉÕ¹¹¥¹œ½¸¡ÑÑÀè¼½±½…±¡½ÍĞè‘íA=IQõ€¤ì(€½¹Í½±”¹±½œ¡€€€µ…¥°½¹¹•Ñ•è€‘ì„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¥õ€¤ì(€½¹Í½±”¹±½œ¡€€€A…ÉÑÌ¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ğ ¤¹õ€¤ì(€½¹Í½±”¹±½œ¡€€€5…¹Õ…±Ì¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ğ ¤¹õq¹€¤ì)ô¤ì(
