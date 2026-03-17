@@ -37,7 +37,7 @@ db.exec(`
     created_at TEXT DEFAULT (datetime('now')),
     updated_at TEXT DEFAULT (datetime('now'))
   );
-  CREATE TABLE IF NOT EX	STS manuals (
+  CREATE TABLE IF NOT EXISTS manuals (
     id TEXT PRIMARY KEY,
     title TEXT NOT NULL,
     models TEXT DEFAULT '[]',
@@ -515,54 +515,103 @@ app.post('/api/parts', (req, res) => {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Ingersoll Rand', datetime('now'))`)
     .run(id, part_num, name || '', category || '', series || '', list_price || null, your_cost || null, quote_num || null, notes || '', JSON.stringify(xref || []));
   res.json({ ok: true, id });
-});‚˜\œ]
-	ËØ\KÜ\ËÎšY	Ë
-™\K™\ÊHOˆÂˆÛÛœÝÈ˜[YKØ]YÛÜžKÙ\šY\Ë\ÝÜšXÙK[Ý\—ØÛÜÝ›Ý\Ë™YˆHH™\K˜›ÙNÂˆ‹œ™\\™J	ÕTUH\ÈÑU˜[YOOËØ]YÛÜžOOËÙ\šY\ÏOË\ÝÜšXÙOOË[Ý\—ØÛÜÝOË›Ý\ÏOË™YOË\]YØ]Y]][YJ››ÝÈŠHÒT‘HYOÉÊBˆœ[Š˜[YKØ]YÛÜžKÙ\šY\Ë\ÝÜšXÙK[Ý\—ØÛÜÝ›Ý\Ë”ÓÓ‹œÝš[™ÚYžJ™Yˆ×JK™\Kœ\˜[\ËšY
-NÂˆ™\ËšœÛÛŠÈÚÎˆYHJNÂŸJNÂ‚˜\™[]J	ËØ\KÜ\ËÎšY	Ë
-™\K™\ÊHOˆÂˆ‹œ™\\™J	ÑSUH”+ÓH\ÈÒT‘HYHÉÊKœ[Š™\Kœ\˜[\ËšY
-NÂˆ™\ËšœÛÛŠÈÚÎˆYHJNÂŸJNÂ‚‹ËÈš[\ˆÜ[ÛœÂ˜\™Ù]
-	ËØ\KÜ\ËÛY]KÙš[\œÉË
-™\K™\ÊHOˆÂˆÛÛœÝØ]YÛÜšY\ÈH‹œ™\\™J	ÔÑSPÕTÕSÕØ]YÛÜžH”“ÓH\ÈÒT‘HØ]YÛÜžHOHˆˆÔ‘Tˆ–HØ]YÛÜžIÊK˜[
+});
 
-K›X\
-ˆOˆ‹˜Ø]YÛÜžJNÂˆÛÛœÝÙ\šY\ÈH‹œ™\\™J	ÔÑSPÕTÕSÕÙ\šY\È”“ÓH\ÈÒT‘HÙ\šY\ÈOHˆˆÔ‘Tˆ–HÙ\šY\ÉÊK˜[
+app.put('/api/parts/:id', (req, res) => {
+  const { name, category, series, list_price, your_cost, notes, xref } = req.body;
+  db.prepare('UPDATE parts SET name=?, category=?, series=?, list_price=?, your_cost=?, notes=?, xref=?, updated_at=datetime("now") WHERE id=?')
+    .run(name, category, series, list_price, your_cost, notes, JSON.stringify(xref || []), req.params.id);
+  res.json({ ok: true });
+});
 
-K›X\
-ˆOˆ‹œÙ\šY\ÊNÂˆÛÛœÝ][Ý\ÈH‹œ™\\™J	ÔÑSPÕTÕSÕ][ÝWÛ[H”“ÓH\ÈÒT‘H][ÝWÛ[HTÈ“Õ•SÔ‘Tˆ–H][ÝWÛ[HTÐÈSRU	ÊK˜[
+app.delete('/api/parts/:id', (req, res) => {
+  db.prepare('DELETE FROM parts WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
 
-K›X\
-ˆOˆ‹œ][ÝWÛ[JNÂˆ™\ËšœÛÛŠÈØ]YÛÜšY\ËÙ\šY\Ë][Ý\ÈJNÂŸJNÂ‚‹ËÈX[X[Â˜\™Ù]
-	ËØ\KÛX[X[ÉË
-™\K™\ÊHOˆÂˆÛÛœÝÈHHH™\Kœ]Y\žNÂˆ]Ü[H	ÔÑSPÕ
-ˆ”“ÓHX[X[ÈÒT‘HOLIÎÂˆÛÛœÝ\˜[\ÈH×NÂˆYˆ
-JHÈÜ[
-ÏH	ÈS‘
-]HRÑHÈÔˆ[Ù[ÈRÑHÈÔˆÛÝ\˜ÙWÜÝXš™XÝRÑHÊIÎÈÛÛœÝZÙHH	IÜ_IXÈ\˜[\Ëœ\Ú
-ZÙKZÙKZÙJNÈBˆÜ[
-ÏH	ÈÔ‘Tˆ–H]HTÐËÜ™X]YØ]TÐÉÎÂˆÛÛœÝ›ÝÜÈH‹œ™\\™JÜ[
-K˜[
-‹‹œ\˜[\ÊNÂˆ™\ËšœÛÛŠ›ÝÜË›X\
-ˆOˆ
-È‹‹œ‹[Ù[Îˆ”ÓÓ‹œ\œÙJ‹›[Ù[È	Ö×IÊHJJJNÂŸJNÂ‚˜\™[]J	ËØ\KÛX[X[ËÎšY	Ë
-™\K™\ÊHOˆÂˆÛÛœÝX[X[H‹œ™\\™J	ÔÑSPÕ
-ˆ”“ÓHX[X[ÈÒT‘HYHÉÊK™Ù]
-™\Kœ\˜[\ËšY
-NÂˆYˆ
-X[X[	‰ˆX[X[™š[[˜[YJHÂˆÛÛœÝœH]š›Ú[ŠTÐQ×ÑT‹X[X[™š[[˜[YJNÂˆYˆ
-œË™^\ÝÔÞ[˜Êœ
-JHœË[›[šÔÞ[˜Êœ
-NÂˆBˆ‹œ™\\™J	ÑSUH”“ÓHX[X[ÈÒT‘HYHÉÊKœ[Š™\Kœ\˜[\ËšY
-NÂˆ™\ËšœÛÛŠÈÚÎˆYHJNÂŸJNÂ‚‹ËÈX[X[\ØY[™Ú[˜\œÜÝ
-	ËØ\KÛX[X[ËÝ\ØY	Ë\ØY˜\œ˜^J	ÜœÉËŒ
-K\Þ[˜È
-™\K™\ÊHOˆÂˆÛÛœÝ™\Ý[ÈH×NÂˆ›Üˆ
-ÛÛœÝš[HÙˆ™\K™š[\È×JHÂˆžHÂˆÛÛœÝY™™\ˆHœËœ™XYš[TÞ[˜Êš[Kœ]
-NÂˆ]•^H	ÉËYÙ\ÈHÂˆžHÈÛÛœÝH]ØZ]”\œÙJY™™\ŠNÈ•^H^ÈYÙ\ÈH›[\YÙ\ÎÈHØ]Ú
-JHßBˆÛÛœÝ[Ù[ÈH^˜XÝ[Ù[Ñœ›ÛU^
-•^
-È	È	È
-Èš[K›ÜšYÚ[˜[˜[YJNÂˆÛÛœÝ]HH
-™\K˜›ÙK]Hš[K›ÜšYÚ[˜[˜[YJKœ™\XÙJ×—ÊÉË	ÉÊKœ™\XÙJ×ËÙË	È	ÊNÂˆÛÛœÝYH\ØYÉÑ]K››ÝÊ
-_WÉÓX]œ˜[™ÛJ
-KÔÝš[™ÊÍŠKœÛXÙJŠ_XÂˆ‹œ™\\™J	ÒS”ÑT•”“ÓHX[X[È
-Y]K[Ù[Ëš[[˜[YKš[\]š[WÜÚ^™KYÙ\ËÛÝ\˜ÙWÜÝXš™XÝ]K\ØYYØžJHU•TU2ƒòÃòÃòÃòÃòÃòÃòÃòÃòÆFFWF–ÖR‚&æ÷r"’Â&ÖçVÂ"’r¢ç'Vâ†–BÂF—FÆRÂ¥4ôâç7G&–æv–g’†ÖöFVÇ2’Âf–ÆRæf–ÆVæÖRÂ÷WÆöG2òG¶f–ÆRæf–ÆVæÖWÖÂf–ÆRç6—¦RÂvW2Âf–ÆRæ÷&–v–æÆæÖR“° ¢òòW‡G&7B'G2g&öÒWÆöFVBD`¢6öç7B'G2ÒW‡G&7E'G4g&öÕFW‡B‡FeFW‡BÂçVÆÂÂæWrFFR‚’çFô•4õ7G&–ær‚’ç7Æ—B‚uBr•³Ò“°¢6öç7B–ç2ÒF"çG&ç67F–öâ‚‚’Óâ°¢f÷"†6öç7Böb'G2’F"ç&W&R‚t”å4U%Bõ"”täõ$R”åDò'G2†–BÇ'EöçVÒÆæÖRÆ6FVv÷'’Ç6W&–W2ÆÆ—7E÷&–6RÇ–÷W%ö6÷7BÆæ÷FW2Ç‡&VbÇ7WÆ–W"’dÅTU2ƒòÃòÃòÃòÃòÃòÃòÃòÃòÃòÃò’r’ç'Vâ‡æ–BÇç'EöçVÒÇææÖRÇæ6FVv÷'’Çç6W&–W2ÇæÆ—7E÷&–6RÇç–÷W%ö6÷7BÇææ÷FW2Çç‡&VbÂt–ævW'6öÆÂ&æBr“°¢Ò“°¢–ç2‚“°¢&W7VÇG2çW6‚‡²ö³¢G'VRÂ–BÂF—FÆRÂÖöFVÇ2Â'G3¢'G2æÆVæwF‚ÂvW2Ò“°¢Ò6F6‚†R’°¢&W7VÇG2çW6‚‡²ö³¢fÇ6RÂf–ÆVæÖS¢f–ÆRæ÷&–v–æÆæÖRÂW'&÷#¢RæÖW76vRÒ“°¢Ð¢Ð¢&W2æ§6öâ‡&W7VÇG2“°§Ò“° ¢òò6V&6‚7&÷72&÷F€¦ævWB‚rö’÷6V&6‚rÂ‡&WÂ&W2’Óâ°¢6öç7B²ÒÒ&WçVW'“°¢–b‚’&WGW&â&W2æ§6öâ‡²'G3¢µÒÂÖçVÇ3¢µÒÒ“°¢6öç7BÆ–¶RÒRG·ÒV°¢6öç7B'G2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒ'G2t„U$R'EöçVÒÄ”´Ròõ"æÖRÄ”´Ròõ"æ÷FW2Ä”´Ròõ"‡&VbÄ”´RòÄ”Ô•BSr’æÆÂ†Æ–¶RÆÆ–¶RÆÆ–¶RÆÆ–¶R¢æÖ‡"Óâ‡²ââç"Â‡&Vc¢¥4ôâç'6R‡"ç‡&VbÇÂuµÒr’Ò’“°¢6öç7BÖçVÇ2ÒF"ç&W&R‚u4TÄT5B¢e$ôÒÖçVÇ2t„U$RF—FÆRÄ”´Ròõ"ÖöFVÇ2Ä”´Ròõ"6÷W&6U÷7V&¦V7BÄ”´RòÄ”Ô•B#r’æÆÂ†Æ–¶RÆÆ–¶RÆÆ–¶R¢æÖ‡"Óâ‡²ââç"ÂÖöFVÇ3¢¥4ôâç'6R‡"æÖöFVÇ2ÇÂuµÒr’Ò’“°¢&W2æ§6öâ‡²'G2ÂÖçVÇ2Ò“°§Ò“° ¢òòWF‚7FGW0¦ævWB‚rö’öWF‚÷7FGW2rÂ‡&WÂ&W2’Óâ°¢&W2æ§6öâ‡²6öææV7FVC¢vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr’ÂW‡—'“¢vWE6WGF–ær‚vvÖ–Å÷Fö¶VåöW‡—'’r’Ò“°§Ò“° ¦ç÷7B‚rö’öWF‚öF—66öææV7BrÂ‡&WÂ&W2’Óâ°¢F"ç&W&R‚$DTÄUDRe$ôÒ6WGF–æw2t„U$R¶W’”â‚vvÖ–Åö66W75÷Fö¶VârÂvvÖ–Å÷&Vg&W6…÷Fö¶VârÂvvÖ–Å÷Fö¶VåöW‡—'’r’"’ç'Vâ‚“°¢&W2æ§6öâ‡²ö³¢G'VRÒ“°§Ò“° ¢òòÒÒ5D%BÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ¦æÆ—7FVâ…õ%BÂ‚’Óâ°¢6öç6öÆRæÆör†ÆâÔ2•"'G2FööÂ'Vææ–æröâ‡GG¢òöÆö6Æ†÷7C¢Gµõ%GÖ“°¢6öç6öÆRæÆör†vÖ–Â6öææV7FVC¢G²vWE6WGF–ær‚vvÖ–Åö66W75÷Fö¶Vâr—Ö“°¢6öç6öÆRæÆör†'G2–âD#¢G¶F"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒ'G2r’ævWB‚’æ7Ö“°¢6öç6öÆRæÆör†ÖçVÇ2–âD#¢G¶F"ç&W&R‚u4TÄT5B4õTåB‚¢’22e$ôÒÖçVÇ2r’ævWB‚’æ7ÕÆæ“°§Ò“°
+// Filter options
+app.get('/api/parts/meta/filters', (req, res) => {
+  const categories = db.prepare('SELECT DISTINCT category FROM parts WHERE category != "" ORDER BY category').all().map(r => r.category);
+  const series = db.prepare('SELECT DISTINCT series FROM parts WHERE series != "" ORDER BY series').all().map(r => r.series);
+  const quotes = db.prepare('SELECT DISTINCT quote_num FROM parts WHERE quote_num IS NOT NULL ORDER BY quote_num DESC LIMIT 30').all().map(r => r.quote_num);
+  res.json({ categories, series, quotes });
+});
+
+// Manuals
+app.get('/api/manuals', (req, res) => {
+  const { q } = req.query;
+  let sql = 'SELECT * FROM manuals WHERE 1=1';
+  const params = [];
+  if (q) { sql += ' AND (title LIKE ? OR models LIKE ? OR source_subject LIKE ?)'; const like = `%${q}%`; params.push(like,like,like); }
+  sql += ' ORDER BY date DESC, created_at DESC';
+  const rows = db.prepare(sql).all(...params);
+  res.json(rows.map(r => ({ ...r, models: JSON.parse(r.models || '[]') })));
+});
+
+app.delete('/api/manuals/:id', (req, res) => {
+  const manual = db.prepare('SELECT * FROM manuals WHERE id = ?').get(req.params.id);
+  if (manual && manual.filename) {
+    const fp = path.join(UPLOADS_DIR, manual.filename);
+    if (fs.existsSync(fp)) fs.unlinkSync(fp);
+  }
+  db.prepare('DELETE FROM manuals WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
+// Manual upload endpoint
+app.post('/api/manuals/upload', upload.array('pdfs', 20), async (req, res) => {
+  const results = [];
+  for (const file of req.files || []) {
+    try {
+      const pdfBuffer = fs.readFileSync(file.path);
+      let pdfText = '', pages = 0;
+      try { const p = await pdfParse(pdfBuffer); pdfText = p.text; pages = p.numpages; } catch(e) {}
+      const models = extractModelsFromText(pdfText + ' ' + file.originalname);
+      const title = (req.body.title || file.originalname).replace(/\.\w+$/, '').replace(/_/g, ' ');
+      const id = `upload_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      db.prepare('INSERT INTO manuals (id, title, models, filename, filepath, file_size, pages, source_subject, date, uploaded_by) VALUES (?,?,?,?,?,?,?,?,datetime("now"),"manual")')
+        .run(id, title, JSON.stringify(models), file.filename, `/uploads/${file.filename}`, file.size, pages, file.originalname);
+
+      // Extract parts from uploaded PDF
+      const parts = extractPartsFromText(pdfText, null, new Date().toISOString().split('T')[0]);
+      const ins = db.transaction(() => {
+        for (const p of parts) db.prepare('INSERT OR IGNORE INTO parts (id,part_num,name,category,series,list_price,your_cost,notes,xref,supplier) VALUES (?,?,?,?,?,?,?,?,?,?)').run(p.id,p.part_num,p.name,p.category,p.series,p.list_price,p.your_cost,p.notes,p.xref,'Ingersoll Rand');
+      });
+      ins();
+      results.push({ ok: true, id, title, models, parts: parts.length, pages });
+    } catch(e) {
+      results.push({ ok: false, filename: file.originalname, error: e.message });
+    }
+  }
+  res.json(results);
+});
+
+// Search across both
+app.get('/api/search', (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.json({ parts: [], manuals: [] });
+  const like = `%${q}%`;
+  const parts = db.prepare('SELECT * FROM parts WHERE part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ? LIMIT 50').all(like,like,like,like)
+    .map(r => ({ ...r, xref: JSON.parse(r.xref || '[]') }));
+  const manuals = db.prepare('SELECT * FROM manuals WHERE title LIKE ? OR models LIKE ? OR source_subject LIKE ? LIMIT 20').all(like,like,like)
+    .map(r => ({ ...r, models: JSON.parse(r.models || '[]') }));
+  res.json({ parts, manuals });
+});
+
+// Auth status
+app.get('/api/auth/status', (req, res) => {
+  res.json({ connected: !!getSetting('gmail_access_token'), expiry: getSetting('gmail_token_expiry') });
+});
+
+app.post('/api/auth/disconnect', (req, res) => {
+  db.prepare("DELETE FROM settings WHERE key IN ('gmail_access_token','gmail_refresh_token','gmail_token_expiry')").run();
+  res.json({ ok: true });
+});
+
+// -- START -----------------------------------------------------------------
+app.listen(PORT, () => {
+  console.log(`\n MAC IR Parts Tool running on http://localhost:${PORT}`);
+  console.log(`   Gmail connected: ${!!getSetting('gmail_access_token')}`);
+  console.log(`   Parts in DB: ${db.prepare('SELECT COUNT(*) as c FROM parts').get().c}`);
+  console.log(`   Manuals in DB: ${db.prepare('SELECT COUNT(*) as c FROM manuals').get().c}\n`);
+});
