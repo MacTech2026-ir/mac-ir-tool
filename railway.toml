@@ -1,9 +1,6 @@
 [build]
 builder = "nixpacks"
 
-[build.nixpacksPlan.phases.setup]
-nixPkgs = ["python3", "make", "gcc"]
-
 [deploy]
 startCommand = "npm start"
 healthcheckPath = "/api/stats"
