@@ -395,7 +395,7 @@ async function runGmailSync() {
     let messages = [];
     let pageToken = null;
     do {
-      const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100${pageToken ? &&pageToken=' + pageToken : ''}`;
+      const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100${pageToken ? '&pageToken=' + pageToken : ''}`;
       const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
       if (res.data.messages) messages = messages.concat(res.data.messages);
       pageToken = res.data.nextPageToken;
@@ -405,7 +405,7 @@ async function runGmailSync() {
 
     const insertPart = db.prepare(`
       INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, date, xref, notes, source_email_id, updated_at)
-      VALUES (@id, @part_num, @name, @category, @category, @series, @list_price, @your_cost, @guote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
+      VALUES (@id, @part_num, @name, @category, @series, @list_price, @your_cost, @quote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
     `);
     const insertManual = db.prepare(`
       INSERT OR IGNORE INTO manuals (id, title, models, filename, filepath, file_size, pages, source_email_id, source_subject, date)
@@ -415,6 +415,7 @@ async function runGmailSync() {
     for (let i = 0; i < messages.length; i++) {
       syncProgress.pct = Math.round(10 + (i / messages.length) * 80);
       syncProgress.scanned = i + 1;
+
       try {
         const msgRes = await axios.get(
           `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}?format=full`,
@@ -425,7 +426,9 @@ async function runGmailSync() {
         const getH = n => (headers.find(h => h.name.toLowerCase() === n.toLowerCase()) || {}).value || '';
         const subject = getH('Subject');
         const date = getH('Date');
-        const parsedDate = ((() => { try { return new Date(date).toISOString().split('T')[0]; } catch(e) { return ''; } })();
+        const parsedDate = (() => { try { return new Date(date).toISOString().split('T')[0]; } catch(e) { return ''; } })();
+
+        // Extract body text
         let bodyText = '';
         const walkParts = part => {
           if (!part) return;
@@ -438,11 +441,14 @@ async function runGmailSync() {
           if (part.parts) part.parts.forEach(walkParts);
         };
         walkParts(msg.payload);
+
         const fullText = subject + ' ' + bodyText;
         const isManual = /manual|service guide|IOM|installation.*operation|operation.*manual/i.test(fullText);
         const isQuote = /CTS-\d+|quote|proposal|part\s*number|part\s*#|\d{8,10}/i.test(fullText);
         const ctsMatch = fullText.match(/CTS-(\d+)/i);
         const quoteNum = ctsMatch ? 'CTS-' + ctsMatch[1] : null;
+
+        // Process attachments
         const walkAttachments = async (part) => {
           if (!part) return;
           if (part.filename && part.filename.toLowerCase().endsWith('.pdf') && part.body?.attachmentId) {
@@ -456,44 +462,100 @@ async function runGmailSync() {
               const filename = `${Date.now()}_${safeName}`;
               const filepath = path.join(UPLOADS_DIR, filename);
               fs.writeFileSync(filepath, pdfBuffer);
-              let pdfText = '', pages = 0;
-              try { const parsed = await pdfParse(pdfBuffer); pdfText = parsed.text; pages = parsed.numpages; } catch(e) {}
+
+              // Parse PDF for text
+              let pdfText = '';
+              let pages = 0;
+              try {
+                const parsed = await pdfParse(pdfBuffer);
+                pdfText = parsed.text;
+                pages = parsed.numpages;
+              } catch(e) {}
+
               const allText = pdfText + ' ' + fullText;
+
               if (isManual || /manual|IOM|service guide/i.test(part.filename)) {
                 const models = extractModelsFromText(allText);
                 const manualId = `manual_${messages[i].id}_${part.body.attachmentId}`;
-                insertManual.run({ id: manualId, title: part.filename.replace(/_/g, ' ').replace(/\.\w+$/, ''), models: JSON.stringify(models), filename, filepath: `/uploads/${filename}`, file_size: pdfBuffer.length, pages, source_email_id: messages[i].id, source_subject: subject, date: parsedDate });
+                insertManual.run({
+                  id: manualId,
+                  title: part.filename.replace(/_/g, ' ').replace(/\.\w+$/, ''),
+                  models: JSON.stringify(models),
+                  filename,
+                  filepath: `/uploads/${filename}`,
+                  file_size: pdfBuffer.length,
+                  pages,
+                  source_email_id: messages[i].id,
+                  source_subject: subject,
+                  date: parsedDate,
+                });
                 syncProgress.manuals++;
                 log(` Manual saved: ${part.filename}`, 'ok');
               }
+
+              // Extract parts from PDF text
               if (isQuote && pdfText) {
                 const pdfParts = extractPartsFromText(pdfText, quoteNum, parsedDate);
-                db.transaction(() => { for (const p of pdfParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })();
+                const insertMany = db.transaction(() => {
+                  for (const p of pdfParts) {
+                    insertPart.run({ ...p, source_email_id: messages[i].id });
+                    syncProgress.parts++;
+                  }
+                });
+                insertMany();
                 if (pdfParts.length > 0) log(`[OK] ${quoteNum || part.filename}: ${pdfParts.length} parts from PDF`, 'ok');
               }
-            } catch(e) { log(`[WARN] Could not download attachment ${part.filename}: ${e.message}`, 'warn'); }
+            } catch(e) {
+              log(`[WARN] Could not download attachment ${part.filename}: ${e.message}`, 'warn');
+            }
           }
           if (part.parts) for (const p of part.parts) await walkAttachments(p);
         };
         await walkAttachments(msg.payload);
-        if (isQuote) { const bodyParts = extractPartsFromText(bodyText, quoteNum, parsedDate); db.transaction(() => { for (const p of bodyParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })(); }
-      } catch(e) { log(`[WARN] Error on email ${i + 1}: ${e.message}`, 'warn'); }
+
+        // Also extract from email body
+        if (isQuote) {
+          const bodyParts = extractPartsFromText(bodyText, quoteNum, parsedDate);
+          const insertBodyParts = db.transaction(() => {
+            for (const p of bodyParts) {
+              insertPart.run({ ...p, source_email_id: messages[i].id });
+              syncProgress.parts++;
+            }
+          });
+          insertBodyParts();
+        }
+
+      } catch(e) {
+        log(`[WARN] Error on email ${i + 1}: ${e.message}`, 'warn');
+      }
+
+      // Rate limit safety
       if (i % 5 === 0) await new Promise(r => setTimeout(r, 200));
     }
-    syncProgress.pct = 100; syncProgress.sub = 'Sync complete!';
+
+    syncProgress.pct = 100;
+    syncProgress.sub = 'Sync complete!';
     log(`[OK] Done -- ${syncProgress.parts} parts, ${syncProgress.manuals} manuals from ${messages.length} emails`, 'ok');
-    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), emails_scanned=?, parts_found=?, manuals_found=?, status="complete", log=? WHERE id=?').run(messages.length, syncProgress.parts, syncProgress.manuals, JSON.stringify(syncLog), logId);
+
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), emails_scanned=?, parts_found=?, manuals_found=?, status="complete", log=? WHERE id=?')
+      .run(messages.length, syncProgress.parts, syncProgress.manuals, JSON.stringify(syncLog), logId);
+
   } catch(e) {
     log(`[ERR] Sync failed: ${e.message}`, 'err');
-    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), status="error", log=? WHERE id=?').run(JSON.stringify(syncLog), logId);
-  } finally { syncInProgress = false; }
+    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), status="error", log=? WHERE id=?')
+      .run(JSON.stringify(syncLog), logId);
+  } finally {
+    syncInProgress = false;
+  }
 }
 
 // -- API ROUTES ------------------------------------------------------------
+
+// Stats
 app.get('/api/stats', (req, res) => {
   const parts = db.prepare('SELECT COUNT(*) as c FROM parts').get().c;
   const manuals = db.prepare('SELECT COUNT(*) as c FROM manuals').get().c;
-  const withPricing = db.prepare(''SELECT COUNT(*) as c FROM parts WHERE list_price IS NOT NULL AND your_cost IS NOT NULL').get().c;
+  const withPricing = db.prepare('SELECT COUNT(*) as c FROM parts WHERE list_price IS NOT NULL AND your_cost IS NOT NULL').get().c;
   const quotes = db.prepare("SELECT COUNT(DISTINCT quote_num) as c FROM parts WHERE quote_num IS NOT NULL").get().c;
   const lastSync = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
   res.json({ parts, manuals, withPricing, quotes, lastSync, gmailConnected: !!getSetting('gmail_access_token') });
