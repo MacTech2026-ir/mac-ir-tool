@@ -11,13 +11,13 @@ const Database = require('better-sqlite3');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// â”€â”€ DIRS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- DIRS ------------------------------------------------------------------
 const UPLOADS_DIR = path.join(__dirname, '..', 'uploads');
 const DB_PATH = path.join(__dirname, '..', 'data', 'mac_ir.db');
 const DATA_DIR = path.join(__dirname, '..', 'data');
 [UPLOADS_DIR, DATA_DIR].forEach(d => { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); });
 
-// â”€â”€ DATABASE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- DATABASE --------------------------------------------------------------
 const db = new Database(DB_PATH);
 db.exec(`
   CREATE TABLE IF NOT EXISTS parts (
@@ -70,7 +70,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_manuals_models ON manuals(models);
 `);
 
-// â”€â”€ MIDDLEWARE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- MIDDLEWARE ------------------------------------------------------------
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -88,7 +88,7 @@ const upload = multer({ storage, limits: { fileSize: 50 * 1024 * 1024 }, fileFil
   cb(null, file.mimetype === 'application/pdf');
 }});
 
-// â”€â”€ HELPERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- HELPERS ---------------------------------------------------------------
 function getSetting(key) {
   const row = db.prepare('SELECT value FROM settings WHERE key = ?').get(key);
   return row ? row.value : null;
@@ -191,7 +191,7 @@ function extractModelsFromText(text) {
   return [...new Set(models)].slice(0, 8);
 }
 
-// â”€â”€ GMAIL OAUTH â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// -- GMAIL OAUTH -----------------------------------------------------------
 app.get('/auth/gmail', (req, res) => {
   const clientId = process.env.GMAIL_CLIENT_ID;
   if (!clientId) return res.status(400).json({ error: 'GMAIL_CLIENT_ID not configured in environment' });
@@ -257,7 +257,8 @@ async function getValidToken() {
   }
   return token;
 }
-// â”€â”€ GMAIL SYNC â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// -- GMAIL SYNC ------------------------------------------------------------
 let syncInProgress = false;
 let syncLog = [];
 let syncProgress = { pct: 0, sub: '', scanned: 0, parts: 0, manuals: 0 };
@@ -328,12 +329,13 @@ async function runGmailSync() {
 
     const insertPart = db.prepare(`
       INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, date, xref, notes, source_email_id, updated_at)
-      VALUES (@id, @part_num, @name, @category, @esults, @list_price, @your_cost, @quote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
+      VALUES (@id, @part_num, @name, @category, @series, @list_price, @your_cost, @quote_num, @date, @xref, @notes, @source_email_id, datetime('now'))
     `);
     const insertManual = db.prepare(`
       INSERT OR IGNORE INTO manuals (id, title, models, filename, filepath, file_size, pages, source_email_id, source_subject, date)
       VALUES (@id, @title, @models, @filename, @filepath, @file_size, @pages, @source_email_id, @source_subject, @date)
     `);
+
     for (let i = 0; i < messages.length; i++) {
       syncProgress.pct = Math.round(10 + (i / messages.length) * 80);
       syncProgress.scanned = i + 1;
@@ -347,167 +349,4 @@ async function runGmailSync() {
         const headers = msg.payload.headers || [];
         const getH = n => (headers.find(h => h.name.toLowerCase() === n.toLowerCase()) || {}).value || '';
         const subject = getH('Subject');
-        const date = getH('Date');
-        const parsedDate = (() => { try { return new Date(date).toISOString().split('T')[0]; } catch(e) { return ''; } })();
-
-        let bodyText = '';
-        const walkParts = part => {
-          if (!part) return;
-          if (part.mimeType === 'text/plain' && part.body?.data) {
-            bodyText += Buffer.from(part.body.data, 'base64').toString('utf8');
-          } else if (part.mimeType === 'text/html' && part.body?.data && !bodyText) {
-            const html = Buffer.from(part.body.data, 'base64').toString('utf8');
-            bodyText += html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
-          }
-          if (part.parts) part.parts.forEach(walkParts);
-        };
-        walkParts(msg.payload);
-
-        const fullText = subject + ' ' + bodyText;
-        const isManual = /manual|service guide|IOM|installation.*operation|operation.*manual/i.test(fullText);
-        const isQuote = /CTS-\d+|quote|proposal|part\s*number|part\s*#|\d{8,10}/i.test(fullText);
-        const ctsMatch = fullText.match(/CTS-(\d+)/i);
-        const quoteNum = ctsMatch ? 'CTS-' + ctsMatch[1] : null;
-
-        const walkAttachments = async (part) => {
-          if (!part) return;
-          if (part.filename && part.filename.toLowerCase().endsWith('.pdf') && part.body?.attachmentId) {
-            try {
-              const attRes = await axios.get(
-                `https://www.googleapis.com/gmail/v1/users/me/messages/${messages[i].id}/attachments/${part.body.attachmentId}`,
-                { headers: { Authorization: `Bearer ${token}` } }
-              );
-              const pdfBuffer = Buffer.from(attRes.data.data, 'base64');
-              const safeName = part.filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-              const filename = `${Date.now()}_${safeName}`;
-              const filepath = path.join(UPLOADS_DIR, filename);
-              fs.writeFileSync(filepath, pdfBuffer);
-
-              let pdfText = ''; let pages = 0;
-              try { const parsed = await pdfParse(pdfBuffer); pdfText = parsed.text; pages = parsed.numpages; } catch(e) {}
-
-              const allText = pdfText + ' ' + fullText;
-              if (isManual || /manual|IOM|service guide/i.test(part.filename)) {
-                const models = extractModelsFromText(allText);
-                insertManual.run({ id: `manual_${messages[i].id}_${part.body.attachmentId}`, title: part.filename.replace(/_/g,' ').replace(/\.\w+$/,''), models: JSON.stringify(models), filename, filepath: `/uploads/${filename}`, file_size: pdfBuffer.length, pages, source_email_id: messages[i].id, source_subject: subject, date: parsedDate });
-                syncProgress.manuals++; log(`ðŸ“– Manual saved: ${part.filename}`, 'ok');
-              }
-              if (isQuote && pdfText) {
-                const pdfParts = extractPartsFromText(pdfText, quoteNum, parsedDate);
-                db.transaction(() => { for (const p of pdfParts) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })();
-                if (pdfParts.length > 0) log(`âœ“ ${quoteNum||part.filename}: ${pdfParts.length} parts from PDF`, 'ok');
-              }
-            } catch(e) { log(`âš  Could not download ${part.filename}: ${e.message}`, 'warn'); }
-          }
-          if (part.parts) for (const p of part.parts) await walkAttachments(p);
-        };
-        await walkAttachments(msg.payload);
-        if (isQuote) { const bp = extractPartsFromText(bodyText, quoteNum, parsedDate); db.transaction(() => { for (const p of bp) { insertPart.run({ ...p, source_email_id: messages[i].id }); syncProgress.parts++; } })(); }
-      } catch(e) { log(`âš  Error on email ${i+1}: ${e.message}`, 'warn'); }
-      if (i % 5 === 0) await new Promise(r => setTimeout(r, 200));
-    }
-
-    syncProgress.pct = 100; syncProgress.sub = 'Sync complete!';
-    log(`âœ… Done â€”  ${syncProgress.parts} parts, ${syncProgress.manuals} manuals from ${messages.length} emails`, 'ok');
-    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), emails_scanned=?, parts_found=?, manuals_found=?, status="complete", log=? WHERE id=?').run(messages.length, syncProgress.parts, syncProgress.manuals, JSON.stringify(syncLog), logId);
-  } catch(e) {
-    log(`âŒ Sync failed: ${e.message}`, 'err');
-    db.prepare('UPDATE sync_log SET completed_at=datetime("now"), status="error", log=? WHERE id=?').run(JSON.stringify(syncLog), logId);
-  } finally { syncInProgress = false; }
-}
-// â”€â”€ API ROUTES â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-app.get('/api/stats', (req, res) => {
-  const parts = db.prepare('SELECT COUNT(*) as c FROM parts').get().c;
-  const manuals = db.prepare('SELECT COUNT(*) as c FROM manuals').get().c;
-  const withPricing = db.prepare('SELECT COUNT(*) as c FROM parts WHERE list_price IS NOT NULL AND your_cost IS NOT NULL').get().c;
-  const quotes = db.prepare("SELECT COUNT(DISTINCT quote_num) as c FROM parts WHERE quote_num IS NOT NULL").get().c;
-  const lastSync = db.prepare('SELECT * FROM sync_log ORDER BY id DESC LIMIT 1').get();
-  res.json({ parts, manuals, withPricing, quotes, lastSync, gmailConnected: !!getSetting('gmail_access_token') });
-});
-
-app.get('/api/parts', (req, res) => {
-  const { q, category, series, quote, sort = 'part_num', limit = 200, offset = 0 } = req.query;
-  let sql = 'SELECT * FROM parts WHERE 1=1';
-  const params = [];
-  if (q) { sql += ' AND (part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ?)'; const like = `%${q}%`; params.push(like,like,like,like); }
-  if (category) { sql += ' AND category = ?'; params.push(category); }
-  if (series) { sql += ' AND series = ?'; params.push(series); }
-  if (quote) { sql += ' AND quote_num = ?'; params.push(quote); }
-  const allowed = ['part_num','category','series','list_price','your_cost','date','name'];
-  sql += ` ORDER BY ${allowed.includes(sort) ? sort : 'part_num'} LIMIT ? OFFSET ?`;
-  params.push(parseInt(limit), parseInt(offset));
-  res.json(db.prepare(sql).all(...params).map(r => ({ ...r, xref: JSON.parse(r.xref || '[]') })));
-});
-
-app.get('/api/parts/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM parts WHERE id = ?').get(req.params.id);
-  if (!row) return res.status(404).json({ error: 'Not found' });
-  res.json({ ...row, xref: JSON.parse(row.xref || '[]') });
-});
-
-app.post('/api/parts', (req, res) => {
-  const { part_num, name, category, series, list_price, your_cost, quote_num, notes, xref } = req.body;
-  if (!part_num) return res.status(400).json({ error: 'part_num required' });
-  const id = `manual_${part_num}_${Date.now()}`;
-  db.prepare(`INSERT OR REPLACE INTO parts (id, part_num, name, category, series, list_price, your_cost, quote_num, notes, xref, supplier, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Ingersoll Rand', datetime('now'))`).run(id, part_num, name||'', category||'', series||'', list_price||null, your_cost||null, quote_num||null, notes||'', JSON.stringify(xref||[]));
-  res.json({ ok: true, id });
-});
-
-app.put('/api/parts/:id', (req, res) => {
-  const { name, category, series, list_price, your_cost, notes, xref } = req.body;
-  db.prepare('UPDATE parts SET name=?, category=?, series=?, list_price=?, your_cost=?, notes=?, xref=?, updated_at=datetime("now") WHERE id=?').run(name, category, series, list_price, your_cost, notes, JSON.stringify(xref||[]), req.params.id);
-  res.json({ ok: true });
-});
-
-app.delete('/api/parts/:id', (req, res) => {
-  db.prepare('DELETE FROM parts WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
-});
-
-app.get('/api/parts/meta/filters', (req, res) => {
-  res.json({
-    categories: db.prepare('SELECT DISTINCT category FROM parts WHERE category != "" ORDER BY category').all().map(r=>r.category),
-    series: db.prepare('SELECT DISTINCT series FROM parts WHERE series != "" ORDER BY series').all().map(r=>r.series),
-    quotes: db.prepare('SELECT DISTINCT quote_num FROM parts WHERE quote_num IS NOT NULL ORDER BY quote_num DESC LIMIT340').all().map(r=>r.quote_num),
-  });
-});
-
-app.get('/api/manuals', (req, res) => {
-  const { q } = req.query;
-  let sql = 'SELECT * FROM manuals WHERE 1=1';
-  const params = [];
-  if (q) { sql += ' AND (title LIKE ? OR models LIKE ? OR source_subject LIKE ?)'; const like = `%${q}%`; params.push(like,like,like); }
-  sql += ' ORDER BY date DESC, created_at DESC';
-  res.json(db.prepare(sql).all(...params).map(r => ({ ...r, models: JSON.parse(r.models||'[]') })));
-});
-
-app.delete('/api/manuals/:id', (req, res) => {
-  const manual = db.prepare('SELECT * FROM manuals WHERE id = ?').get(req.params.id);
-  if (manual&&manual.filename) { const fp=path.join(UPLOADS_DIR,manual.filename); if (fs.existsSync(fp)) fs.unlinkSync(fp); }
-  db.prepare('DELETE FROM manuals WHERE id = ?').run(req.params.id);
-  res.json({ ok: true });
-});
-
-app.post('/api/manuals/upload', upload.array('pdfs', 20), async (req, res) => {
-  const results = [];
-  for (const file of req.files||[]) {
-    try {
-      const buf = fs.readFileSync(file.path);
-      let pdfText='', pages=0;
-      try { const p=await pdfParse(buf); pdfText=p.text; pages=p.numpages; } catch(e){}
-      const models=extractModelsFromText(pdfText+' '+file.originalname);
-      const title=(req.body.title||file.originalname).replace(/\.\w+$/,'').replace(/_/g,' ');
-      const id=`upload_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-      db.prepare('INSERT INTO manuals (id,title,models,filename,filepath,file_size,pages,source_subject,date,uploaded_by) VALUES (?,?,?,?,?,?,?,?,datetime("now"),"manual")').run(id,title,JSON.stringify(models),file.filename,`/uploads/${file.filename}`,file.size,pages,file.originalname);
-      const parts=extractPartsFromText(pdfText,null,new Date().toISOString().split('T')[0]);
-      db.transaction(()=>{forèconst p of parts) db.prepare('INSERT OR IGNORE INTO parts (id,part_num,name,category,series,list_price,your_cost,notes,xref,supplier) VALUES (?,?,?,?,?,?,?,?,?,?)').run(p.id,p.part_num,p.name,p.category,p.series,p.list_price,p.your_cost,p.notes,p.xref,'Ingersoll Rand');})();
-      results.push({ ok:true, id, title, models, parts:parts.length, pages });
-    } catch(e) { results.push({ ok:false, filename:file.originalname, error:e.message }); }
-  }
-  res.json(results);
-});
-
-app.get('/api/search', (req, res) => {
-  const { q } = req.query; if (!q) return res.json({ parts:[], manuals:[] });
-  const like=`%${q}%`;
-  res.json({ parts: db.prepare('SELECT * FROM parts WHERE part_num LIKE ? OR name LIKE ? OR notes LIKE ? OR xref LIKE ? LIMIT 50').all(like,like,like,like).map(r=>(yÈ±áÉ•˜é)M=8¹Á…ÉÍ”¡È¹áÉ•™ñðmtœ¥ô¤¤°µ…¹Õ…±Ìè‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!IÑ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ð1%-€ü1%5%PÈÐÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”¤¹µ…À¡Èôø¡ì¸¸¹È±•µ½‘•±Ìé)M=8¹Á…ÉÍ”¡È¹µ½‘•±Íñðmtœ¥ô¤¤ô¤ì)ô¤ì()…ÁÀ¹•Ð œ½…Á¤½…ÕÑ ½ÍÑ…ÑÕÌœ°€¡É•Ä°É•Ì¤€ôøìÉ•Ì¹©Í½¸¡ì½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤°•áÁ¥Éäè•ÑM•ÑÑ¥¹œ µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ô¤ìô¤ì)…ÁÀ¹Á½ÍÐ œ½…Á¤½…ÕÑ ½‘¥Í½¹¹•Ðœ°€¡É•Ä°É•Ì¤€ôøì‘ˆ¹ÁÉ•Á…É” ‰1QI=4Í•ÑÑ¥¹Ì]!I­•ä%8€ µ…¥±}…•ÍÍ}Ñ½­•¸œ°µ…¥±}É•™É•Í¡}Ñ½­•¸œ°µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ˆ¤¹ÉÕ¸ ¤ìÉ•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ìô¤ì()…ÁÀ¹±¥ÍÑ•¸¡A=IP°€ ¤€ôøì(€½¹Í½±”¹±½œ¡q»Â~RÐ5%HA…ÉÑÌQ½½°ÉÕ¹¹¥¹œ½¸¡ÑÑÀè¼½±½…±¡½ÍÐè‘íA=IQõ€¤ì(€½¹Í½±”¹±½œ¡€€€µ…¥°½¹¹•Ñ•è€‘ì„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¥õ€¤ì(€½¹Í½±”¹±½œ¡€€€A…ÉÑÌ¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ð ¤¹õ€¤ì(€½¹Í½±”¹±½œ¡€€€5…¹Õ…±Ì¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ð ¤¹õq¹€¤ì)ô¤ì(ô¤ì(€€€ô(€ô(€É•Ì¹©Í½¸¡É•ÍÕ±ÑÌ¤ì)ô¤ì((¼¼M•…É …É½ÍÌ‰½Ñ )…ÁÀ¹•Ð œ½…Á¤½Í•…É œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐìÄô€ôÉ•Ä¹ÅÕ•Éäì(€¥˜€ …Ä¤É•ÑÕÉ¸É•Ì¹©Í½¸¡ìÁ…ÉÑÌèmt°µ…¹Õ…±Ìèmtô¤ì(€½¹ÍÐ±¥­”€ô€”‘íÅô•€ì(€½¹ÍÐÁ…ÉÑÌ€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4Á…ÉÑÌ]!IÁ…ÉÑ}¹Õ´1%-€ü=H¹…µ”1%-€ü=H¹½Ñ•Ì1%-€ü=HáÉ•˜1%-€ü1%5%P€ÔÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°áÉ•˜è)M=8¹Á…ÉÍ”¡È¹áÉ•˜ñð€mtœ¤ô¤¤ì(€½¹ÍÐµ…¹Õ…±Ì€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!IÑ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ð1%-€ü1%5%P€ÈÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°µ½‘•±Ìè)M=8¹Á…ÉÍ”¡È¹µ½‘•±Ìñð€mtœ¤ô¤¤ì(€É•Ì¹©Í½¸¡ìÁ…ÉÑÌ°µ…¹Õ…±Ìô¤ì)ô¤ì((¼¼ÕÑ ÍÑ…ÑÕÌ)…ÁÀ¹•Ð œ½…Á¤½…ÕÑ ½ÍÑ…ÑÕÌœ°€¡É•Ä°É•Ì¤€ôøì(€É•Ì¹©Í½¸¡ì½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤°•áÁ¥Éäè•ÑM•ÑÑ¥¹œ µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ô¤ì)ô¤ì()…ÁÀ¹Á½ÍÐ œ½…Á¤½…ÕÑ ½‘¥Í½¹¹•Ðœ°€¡É•Ä°É•Ì¤€ôøì(€‘ˆ¹ÁÉ•Á…É” ‰1QI=4Í•ÑÑ¥¹Ì]!I­•ä%8€ µ…¥±}…•ÍÍ}Ñ½­•¸œ°µ…¥±}É•™É•Í¡}Ñ½­•¸œ°µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ˆ¤¹ÉÕ¸ ¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì((¼¼ƒŠRŠR MQIPƒŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠRŠR )…ÁÀ¹±¥ÍÑ•¸¡A=IP°€ ¤€ôøì(€½¹Í½±”¹±½œ¡q»Â~RÐ5%HA…ÉÑÌQ½½°ÉÕ¹¹¥¹œ½¸¡ÑÑÀè¼½±½…±¡½ÍÐè‘íA=IQõ€¤ì(€½¹Í½±”¹±½œ¡€€€µ…¥°½¹¹•Ñ•è€‘ì„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¥õ€¤ì(€½¹Í½±”¹±½œ¡€€€A…ÉÑÌ¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ð ¤¹õ€¤ì(€½¹Í½±”¹±½œ¡€€€5…¹Õ…±Ì¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ð ¤¹õq¹€¤ì)ô¤ì(
+        const date = getH('Date')$ì(€€€€€€€½¹ÍÐÁ…ÉÍ•‘…Ñ”€ô€  ¤€ôøìÑÉäìÉ•ÑÕÉ¸¹•Ü…Ñ”¡‘…Ñ”¤¹Ñ½%M=MÑÉ¥¹œ ¤¹ÍÁ±¥Ð Pœ¥lÁtìô…Ñ ¡”¤ìÉ•ÑÕÉ¸€œœìôô¤ ¤ì((€€€€€€€€¼¼áÑÉ…Ð‰½‘äÑ•áÐ(€€€€€€€±•Ð‰½‘åQ•áÐ€ô€œœì(€€€€€€€½¹ÍÐÝ…±­A…ÉÑÌ€ôÁ…ÉÐ€ôøì(€€€€€€€€€¥˜€ …Á…ÉÐ¤É•ÑÕÉ¸ì(€€€€€€€€€¥˜€¡Á…ÉÐ¹µ¥µ•QåÁ”€ôôô€Ñ•áÐ½Á±…¥¸œ€˜˜Á…ÉÐ¹‰½‘äü¹‘…Ñ„¤ì(€€€€€€€€€€€‰½‘åQ•áÐ€¬ô	Õ™™•È¹™É½´¡Á…ÉÐ¹‰½‘ä¹‘…Ñ„°€‰…Í”ØÐœ¤¹Ñ½MÑÉ¥¹œ ÕÑ˜àœ¤ì(€€€€€€€€€ô•±Í”¥˜€¡Á…ÉÐ¹µ¥µ•QåÁ”€ôôô€Ñ•áÐ½¡Ñµ°œ€˜˜Á…ÉÐ¹‰½‘äü¹‘…Ñ„€˜˜€…‰½‘åQ•áÐ¤ì(€€€€€€€€€€€½¹ÍÐ¡Ñµ°€ô	Õ™™•È¹™É½´¡Á…ÉÐ¹‰½‘ä¹‘…Ñ„°€‰…Í”ØÐœ¤¹Ñ½MÑÉ¥¹œ ÕÑ˜àœ¤ì(€€€€€€€€€€€‰½‘åQ•áÐ€¬ô¡Ñµ°¹É•Á±…” ¼ñmxùt¬ø½œ°€œ€œ¤¹É•Á±…” ½qÌ¬½œ°€œ€œ¤ì(€€€€€€€€€ô(€€€€€€€€€¥˜€¡Á…ÉÐ¹Á…ÉÑÌ¤Á…ÉÐ¹Á…ÉÑÌ¹™½É… ¡Ý…±­A…ÉÑÌ¤ì(€€€€€€€ôì(€€€€€€€Ý…±­A…ÉÑÌ¡µÍœ¹Á…å±½…¤ì((€€€€€€€½¹ÍÐ™Õ±±Q•áÐ€ôÍÕ‰©•Ð€¬€œ€œ€¬‰½‘åQ•áÐì(€€€€€€€½¹ÍÐ¥Í5…¹Õ…°€ô€½µ…¹Õ…±ñÍ•ÉÙ¥”Õ¥‘•ñ%=5ñ¥¹ÍÑ…±±…Ñ¥½¸¸©½Á•É…Ñ¥½¹ñ½Á•É…Ñ¥½¸¸©µ…¹Õ…°½¤¹Ñ•ÍÐ¡™Õ±±Q•áÐ¤ì(€€€€€€€½¹ÍÐ¥ÍEÕ½Ñ”€ô€½QLµq­ñÅÕ½Ñ•ñÁÉ½Á½Í…±ñÁ…ÉÑqÌ©¹Õµ‰•ÉñÁ…ÉÑqÌ¨ñq‘ìà°ÄÁô½¤¹Ñ•ÍÐ¡™Õ±±Q•áÐ¤ì(€€€€€€€½¹ÍÐÑÍ5…Ñ €ô™Õ±±Q•áÐ¹µ…Ñ  ½QL´¡q¬¤½¤¤ì(€€€€€€€½¹ÍÐÅÕ½Ñ•9Õ´€ôÑÍ5…Ñ €ü€QL´œ€¬ÑÍ5…Ñ¡lÅt€è¹Õ±°ì((€€€€€€€€¼¼AÉ½•ÍÌ…ÑÑ…¡µ•¹ÑÌ(€€€€€€€½¹ÍÐÝ…±­ÑÑ…¡µ•¹ÑÌ€ô…Íå¹Œ€¡Á…ÉÐ¤€ôøì(€€€€€€€€€¥˜€ …Á…ÉÐ¤É•ÑÕÉ¸ì(€€€€€€€€€¥˜€¡Á…ÉÐ¹™¥±•¹…µ”€˜˜Á…ÉÐ¹™¥±•¹…µ”¹Ñ½1½Ý•É…Í” ¤¹•¹‘Í]¥Ñ  œ¹Á‘˜œ¤€˜˜Á…ÉÐ¹‰½‘äü¹…ÑÑ…¡µ•¹Ñ%¤ì(€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€½¹ÍÐ…ÑÑI•Ì€ô…Ý…¥Ð…á¥½Ì¹•Ð (€€€€€€€€€€€€€€€¡ÑÑÁÌè¼½ÝÝÜ¹½½±•…Á¥Ì¹½´½µ…¥°½ØÄ½ÕÍ•ÉÌ½µ”½µ•ÍÍ…•Ì¼‘íµ•ÍÍ…•Ím¥t¹¥‘ô½…ÑÑ…¡µ•¹ÑÌ¼‘íÁ…ÉÐ¹‰½‘ä¹…ÑÑ…¡µ•¹Ñ%‘õ€°(€€€€€€€€€€€€€€€ì¡•…‘•ÉÌèìÕÑ¡½É¥é…Ñ¥½¸è	•…É•È€‘íÑ½­•¹õ€ôô(€€€€€€€€€€€€€€¤ì(€€€€€€€€€€€€€½¹ÍÐÁ‘™	Õ™™•È€ô	Õ™™•È¹™É½´¡…ÑÑI•Ì¹‘…Ñ„¹‘…Ñ„°€‰…Í”ØÐœ¤ì(€€€€€€€€€€€€€½¹ÍÐÍ…™•9…µ”€ôÁ…ÉÐ¹™¥±•¹…µ”¹É•Á±…” ½my„µéµhÀ´ä¹pµ}t½œ°€|œ¤ì(€€€€€€€€€€€€€½¹ÍÐ™¥±•¹…µ”€ô€‘í…Ñ”¹¹½Ü ¥õ|‘íÍ…™•9…µ•õ€ì(€€€€€€€€€€€€€½¹ÍÐ™¥±•Á…Ñ €ôÁ…Ñ ¹©½¥¸¡UA1=M}%H°™¥±•¹…µ”¤ì(€€€€€€€€€€€€€™Ì¹ÝÉ¥Ñ•¥±•Må¹Œ¡™¥±•Á…Ñ °Á‘™	Õ™™•È¤ì((€€€€€€€€€€€€€€¼¼A…ÉÍ”A™½ÈÑ•áÐ(€€€€€€€€€€€€€±•ÐÁ‘™Q•áÐ€ô€œœì(€€€€€€€€€€€€€±•ÐÁ…•Ì€ô€Àì(€€€€€€€€€€€€€ÑÉäì(€€€€€€€€€€€€€€€½¹ÍÐÁ…ÉÍ•€ô…Ý…¥ÐÁ‘™A…ÉÍ”¡Á‘™	Õ™™•È¤ì(€€€€€€€€€€€€€€€Á‘™Q•áÐ€ôÁ…ÉÍ•¹Ñ•áÐì(€€€€€€€€€€€€€€€Á…•Ì€ôÁ…ÉÍ•¹¹ÕµÁ…•Ìì(€€€€€€€€€€€€€ô…Ñ ¡”¤íô((€€€€€€€€€€€€€½¹ÍÐ…±±Q•áÐ€ôÁ‘™Q•áÐ€¬€œ€œ€¬™Õ±±Q•áÐì((€€€€€€€€€€€€€¥˜€¡¥Í5…¹Õ…°ñð€½µ…¹Õ…±ñ%=5ñÍ•ÉÙ¥”Õ¥‘”½¤¹Ñ•ÍÐ¡Á…ÉÐ¹™¥±•¹…µ”¤¤ì(€€€€€€€€€€€€€€€½¹ÍÐµ½‘•±Ì€ô•áÑÉ…Ñ5½‘•±ÍÉ½µQ•áÐ¡…±±Q•áÐ¤ì(€€€€€€€€€€€€€€€½¹ÍÐµ…¹Õ…±%€ôµ…¹Õ…±|‘íµ•ÍÍ…•Ím¥t¹¥‘õ|‘íÁ…ÉÐ¹‰½‘ä¹…ÑÑ…¡µ•¹Ñ%‘õ€ì(€€€€€€€€€€€€€€€¥¹Í•ÉÑ5…¹Õ…°¹ÉÕ¸¡ì(€€€€€€€€€€€€€€€€€¥èµ…¹Õ…±%°(€€€€€€€€€€€€€€€€€Ñ¥Ñ±”èÁ…ÉÐ¹™¥±•¹…µ”¹É•Á±…” ½|½œ°€œ€œ¤¹É•Á±…” ½p¹qÜ¬¼°€œœ¤°(€€€€€€€€€€€€€€€€€µ½‘•±Ìè)M=8¹ÍÑÉ¥¹¥™ä¡µ½‘•±Ì¤°(€€€€€€€€€€€€€€€€€™¥±•¹…µ”°(€€€€€€€€€€€€€€€€€™¥±•Á…Ñ è€½ÕÁ±½…‘Ì¼‘í™¥±•¹…µ•õ€°(€€€€€€€€€€€€€€€€€™¥±•}Í¥é”èÁ‘™	Õ™™•È¹±•¹Ñ °(€€€€€€€€€€€€€€€€€Á…•Ì°(€€€€€€€€€€€€€€€€€Í½ÕÉ•}•µ…¥±}¥èµ•ÍÍ…•Ím¥t¹¥°(€€€€€€€€€€€€€€€€€Í½ÕÉ•}ÍÕ‰©•ÐèÍÕ‰©•Ð°(€€€€€€€€€€€€€€€€€‘…Ñ”èÁ…ÉÍ•‘…Ñ”°(€€€€€€€€€€€€€€€ô¤ì(€€€€€€€€€€€€€€€Íå¹AÉ½É•ÍÌ¹µ…¹Õ…±Ì¬¬ì(€€€€€€€€€€€€€€€±½œ¡ƒÂ~NT€5…¹Õ…°Í…Ù•è€‘íÁ…ÉÐ¹™¥±•¹…µ•õ€°€½¬œ¤ì(€€€€€€€€€€€€€ô((€€€€€€€€€€€€€€¼¼áÑÉ…ÐÁ…ÉÑÌ™É½´AÑ•áÐ(€€€€€€€€€€€€€¥˜€¡¥ÍEÕ½Ñ”€˜˜Á‘™Q•áÐ¤ì(€€€€€€€€€€€€€€€½¹ÍÐÁ‘™A…ÉÑÌ€ô•áÑÉ…ÑA…ÉÑÍÉ½µQ•áÐ¡Á‘™Q•áÐ°ÅÕ½Ñ•9Õ´°Á…ÉÍ•‘…Ñ”¤ì(€€€€€€€€€€€€€€€½¹ÍÐ¥¹Í•ÉÑ5…¹ä€ô‘ˆ¹ÑÉ…¹Í…Ñ¥½¸  ¤€ôøì(€€€€€€€€€€€€€€€€€™½È€¡½¹ÍÐÀ½˜Á‘™A…ÉÑÌ¤ì(€€€€€€€€€€€€€€€€€€€¥¹Í•ÉÑA…ÉÐ¹ÉÕ¸¡ì€¸¸¹À°Í½ÕÉ•}•µ…¥±}¥èµ•ÍÍ…•Ím¥t¹¥ô¤ì(€€€€€€€€€€€€€€€€€€€Íå¹AÉ½É•ÍÌ¹Á…ÉÑÌ¬¬ì(€€€€€€€€€€€€€€€€€ô(€€€€€€€€€€€€€€€ô¤ì(€€€€€€€€€€€€€€€¥¹Í•ÉÑ5…¹ä ¤ì(€€€€€€€€€€€€€€€¥˜€¡Á‘™A…ÉÑÌ¹±•¹Ñ €ø€À¤±½œ¡ƒŠrL€‘íÅÕ½Ñ•9Õ´ñðÁ…ÉÐ¹™¥±•¹…µ•ôè€‘íÁ‘™A…ÉÑÌ¹±•¹Ñ¡ôÁ…ÉÑÌ™É½´A€°€½¬œ¤ì(€€€€€€€€€€€€€ô(€€€€€€€€€€€ô…Ñ ¡”¤ì(€€€€€€€€€€€€€±½œ¡ƒŠj€½Õ±¹½Ð‘½Ý¹±½……ÑÑ…¡µ•¹Ð€‘íÁ…ÉÐ¹™¥±•¹…µ•ôè€‘í”¹µ•ÍÍ…•õ€°€Ý…É¸œ¤ì(€€€€€€€€€€€ô(€€€€€€€€€ô(€€€€€€€€€¥˜€¡Á…ÉÐ¹Á…ÉÑÌ¤™½È€¡½¹ÍÐÀ½˜Á…ÉÐ¹Á…ÉÑÌ¤…Ý…¥ÐÝ…±­ÑÑ…¡µ•¹ÑÌ¡À¤ì(€€€€€€€ôì(€€€€€€€…Ý…¥ÐÝ…±­ÑÑ…¡µ•¹ÑÌ¡µÍœ¹Á…å±½…¤ì((€€€€€€€€¼¼±Í¼•áÑÉ…Ð™É½´•µ…¥°‰½‘ä(€€€€€€€¥˜€¡¥ÍEÕ½Ñ”¤ì(€€€€€€€€€½¹ÍÐ‰½‘åA…ÉÑÌ€ô•áÑÉ…ÑA…ÉÑÍÉ½µQ•áÐ¡‰½‘åQ•áÐ°ÅÕ½Ñ•9Õ´°Á…ÉÍ•‘…Ñ”¤ì(€€€€€€€€€½¹ÍÐ¥¹Í•ÉÑ	½‘åA…ÉÑÌ€ô‘ˆ¹ÑÉ…¹Í…Ñ¥½¸  ¤€ôøì(€€€€€€€€€€€™½È€¡½¹ÍÐÀ½˜‰½‘åA…ÉÑÌ¤ì(€€€€€€€€€€€€€¥¹Í•ÉÑA…ÉÐ¹ÉÕ¸¡ì€¸¸¹À°Í½ÕÉ•}•µ…¥±}¥èµ•ÍÍ…•Ím¥t¹¥ô¤ì(€€€€€€€€€€€€€Íå¹AÉ½É•ÍÌ¹Á…ÉÑÌ¬¬ì(€€€€€€€€€€€ô(€€€€€€€€€ô¤ì(€€€€€€€€€¥¹Í•ÉÑ	½‘åA…ÉÑÌ ¤ì(€€€€€€€ô((€€€€€ô…Ñ ¡”¤ì(€€€€€€€±½œ¡ƒŠj€ÉÉ½È½¸•µ…¥°€‘í¤€¬€Åôè€‘í”¹µ•ÍÍ…•õ€°€Ý…É¸œ¤ì(€€€€€ô((€€€€€€¼¼I…Ñ”±¥µ¥ÐÍ…™•Ñä(€€€€€¥˜€¡¤€”€Ô€ôôô€À¤…Ý…¥Ð¹•ÜAÉ½µ¥Í”¡È€ôøÍ•ÑQ¥µ•½ÕÐ¡È°€ÈÀÀ¤¤ì(€€€ô((€€€Íå¹AÉ½É•ÍÌ¹ÁÐ€ô€ÄÀÀì(€€€Íå¹AÉ½É•ÍÌ¹ÍÕˆ€ô€Må¹Œ½µÁ±•Ñ”„œì(€€€±½œ¡ƒŠr½¹”ƒŠP€‘íÍå¹AÉ½É•ÍÌ¹Á…ÉÑÍôÁ…ÉÑÌ°€‘íÍå¹AÉ½É•ÍÌ¹µ…¹Õ…±Íôµ…¹Õ…±Ì™É½´€‘íµ•ÍÍ…•Ì¹±•¹Ñ¡ô•µ…¥±Í€°€½¬œ¤ì((€€€‘ˆ¹ÁÉ•Á…É” UAQÍå¹}±½œMP½µÁ±•Ñ•‘}…Ðõ‘…Ñ•Ñ¥µ” ‰¹½Üˆ¤°•µ…¥±Í}Í…¹¹•ôü°Á…ÉÑÍ}™½Õ¹ôü°µ…¹Õ…±Í}™½Õ¹ôü°ÍÑ…ÑÕÌô‰½µÁ±•Ñ”ˆ°±½œôü]!I¥ôüœ¤(€€€€€€¹ÉÕ¸¡µ•ÍÍ…•Ì¹±•¹Ñ °Íå¹AÉ½É•ÍÌ¹Á…ÉÑÌ°Íå¹AÉ½É•ÍÌ¹µ…¹Õ…±Ì°)M=8¹ÍÑÉ¥¹¥™ä¡Íå¹1½œ¤°±½%¤ì((€ô…Ñ ¡”¤ì(€€€±½œ¡ƒŠv0Må¹Œ™…¥±•è€‘í”¹µ•ÍÍ…•õ€°€•ÉÈœ¤ì(€€€‘ˆ¹ÁÉ•Á…É” UAQÍå¹}±½œMP½µÁ±•Ñ•‘}…Ðõ‘…Ñ•Ñ¥µ” ‰¹½Üˆ¤°ÍÑ…ÑÕÌô‰•ÉÉ½Èˆ°±½œôü]!I¥ôüœ¤(€€€€€€¹ÉÕ¸¡)M=8¹ÍÑÉ¥¹¥™ä¡Íå¹1½œ¤°±½%¤ì(€ô™¥¹…±±äì(€€€Íå¹%¹AÉ½É•ÍÌ€ô™…±Í”ì(€ô)ô((¼¼€´´A$I=UQL€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´((¼¼MÑ…ÑÌ)…ÁÀ¹•Ð œ½…Á¤½ÍÑ…ÑÌœ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐÁ…ÉÑÌ€ô‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ð ¤¹Œì(€½¹ÍÐµ…¹Õ…±Ì€ô‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ð ¤¹Œì(€½¹ÍÐÝ¥Ñ¡AÉ¥¥¹œ€ô‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌ]!I±¥ÍÑ}ÁÉ¥”%L9=P9U109å½ÕÉ}½ÍÐ%L9=P9U10œ¤¹•Ð ¤¹Œì(€½¹ÍÐÅÕ½Ñ•Ì€ô‘ˆ¹ÁÉ•Á…É” ‰M1P=U9P¡%MQ%9PÅÕ½Ñ•}¹Õ´¤…ÌŒI=4Á…ÉÑÌ]!IÅÕ½Ñ•}¹Õ´%L9=P9U10ˆ¤¹•Ð ¤¹Œì(€½¹ÍÐ±…ÍÑMå¹Œ€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4Íå¹}±½œ=IH	d¥M1%5%P€Äœ¤¹•Ð ¤ì(€É•Ì¹©Í½¸¡ìÁ…ÉÑÌ°µ…¹Õ…±Ì°Ý¥Ñ¡AÉ¥¥¹œ°ÅÕ½Ñ•Ì°±…ÍÑMå¹Œ°µ…¥±½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤ô¤ì)ô¤ì((¼¼A…ÉÑÌ)…ÁÀ¹•Ð œ½…Á¤½Á…ÉÑÌœ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐìÄ°…Ñ•½Éä°Í•É¥•Ì°ÅÕ½Ñ”°Í½ÉÐ€ô€Á…ÉÑ}¹Õ´œ°±¥µ¥Ð€ô€ÈÀÀ°½™™Í•Ð€ô€Àô€ôÉ•Ä¹ÅÕ•Éäì(€±•ÐÍÅ°€ô€M1P€¨I=4Á…ÉÑÌ]!I€ÄôÄœì(€½¹ÍÐÁ…É…µÌ€ômtì(€¥˜€¡Ä¤ìÍÅ°€¬ô€œ9€¡Á…ÉÑ}¹Õ´1%-€ü=H¹…µ”1%-€ü=H¹½Ñ•Ì1%-€ü=HáÉ•˜1%-€ü¤œì½¹ÍÐ±¥­”€ô€”‘íÅô•€ìÁ…É…µÌ¹ÁÕÍ ¡±¥­”±±¥­”±±¥­”±±¥­”¤ìô(€¥˜€¡…Ñ•½Éä¤ìÍÅ°€¬ô€œ9…Ñ•½Éä€ô€üœìÁ…É…µÌ¹ÁÕÍ ¡…Ñ•½Éä¤ìô(€¥˜€¡Í•É¥•Ì¤ìÍÅ°€¬ô€œ9Í•É¥•Ì€ô€üœìÁ…É…µÌ¹ÁÕÍ ¡Í•É¥•Ì¤ìô(€¥˜€¡ÅÕ½Ñ”¤ìÍÅ°€¬ô€œ9ÅÕ½Ñ•}¹Õ´€ô€üœìÁ…É…µÌ¹ÁÕÍ ¡ÅÕ½Ñ”¤ìô(€½¹ÍÐ…±±½Ý•€ôlÁ…ÉÑ}¹Õ´œ°…Ñ•½Éäœ°Í•É¥•Ìœ°±¥ÍÑ}ÁÉ¥”œ°å½ÕÉ}½ÍÐœ°‘…Ñ”œ°¹…µ”tì(€ÍÅ°€¬ô€=IH	d€‘í…±±½Ý•¹¥¹±Õ‘•Ì¡Í½ÉÐ¤€üÍ½ÉÐ€è€Á…ÉÑ}¹Õ´ô1%5%P€ü=MP€ý€ì(€Á…É…µÌ¹ÁÕÍ ¡Á…ÉÍ•%¹Ð¡±¥µ¥Ð¤°Á…ÉÍ•%¹Ð¡½™™Í•Ð¤¤ì(€½¹ÍÐÉ½ÝÌ€ô‘ˆ¹ÁÉ•Á…É”¡ÍÅ°¤¹…±° ¸¸¹Á…É…µÌ¤ì(€É•Ì¹©Í½¸¡É½ÝÌ¹µ…À¡È€ôø€¡ì€¸¸¹È°áÉ•˜è)M=8¹Á…ÉÍ”¡È¹áÉ•˜ñð€mtœ¤ô¤¤¤ì)ô¤ì()…ÁÀ¹•Ð œ½…Á¤½Á…ÉÑÌ¼é¥œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐÉ½Ü€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4Á…ÉÑÌ]!I¥€ô€üœ¤¹•Ð¡É•Ä¹Á…É…µÌ¹¥¤ì(€¥˜€ …É½Ü¤É•ÑÕÉ¸É•Ì¹ÍÑ…ÑÕÌ ÐÀÐ¤¹©Í½¸¡ì•ÉÉ½Èè€9½Ð™½Õ¹œô¤ì(€É•Ì¹©Í½¸¡ì€¸¸¹É½Ü°áÉ•˜è)M=8¹Á…ÉÍ”¡É½Ü¹áÉ•˜ñð€mtœ¤ô¤ì)ô¤ì()…ÁÀ¹Á½ÍÐ œ½…Á¤½Á…ÉÑÌœ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐìÁ…ÉÑ}¹Õ´°¹…µ”°…Ñ•½Éä°Í•É¥•Ì°±¥ÍÑ}ÁÉ¥”°å½ÕÉ}½ÍÐ°ÅÕ½Ñ•}¹Õ´°¹½Ñ•Ì°áÉ•˜ô€ôÉ•Ä¹‰½‘äì(€¥˜€ …Á…ÉÑ}¹Õ´¤É•ÑÕÉ¸É•Ì¹ÍÑ…ÑÕÌ ÐÀÀ¤¹©Í½¸¡ì•ÉÉ½Èè€Á…ÉÑ}¹Õ´É•ÅÕ¥É•œô¤ì(€½¹ÍÐ¥€ôµ…¹Õ…±|‘íÁ…ÉÑ}¹Õµõ|‘í…Ñ”¹¹½Ü ¥õ€ì(€‘ˆ¹ÁÉ•Á…É”¡%9MIP=HIA1%9Q<Á…ÉÑÌ€¡¥°Á…ÉÑ}¹Õ´°¹…µ”°…Ñ•½Éä°Í•É¥•Ì°±¥ÍÑ}ÁÉ¥”°å½ÕÉ}½ÍÐ°ÅÕ½Ñ•}¹Õ´°¹½Ñ•Ì°áÉ•˜°ÍÕÁÁ±¥•È°ÕÁ‘…Ñ•‘}…Ð¤(€€€Y1UL€ ü°€ü°€ü°€ü°€ü°€ü°€ü°€ü°€ü°€ü°€%¹•ÉÍ½±°I…¹œ°‘…Ñ•Ñ¥µ” ¹½Üœ¤¥€¤(€€€€¹ÉÕ¸¡¥°Á…ÉÑ}¹Õ´°¹…µ”ñð€œœ°…Ñ•½Éäñð€œœ°Í•É¥•Ìñð€œœ°±¥ÍÑ}ÁÉ¥”ñð¹Õ±°°å½ÕÉ}½ÍÐñð¹Õ±°°ÅÕ½Ñ•}¹Õ´ñð¹Õ±°°¹½Ñ•Ìñð€œœ°)M=8¹ÍÑÉ¥¹¥™ä¡áÉ•˜ñðmt¤¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”°¥ô¤ì)ô¤ì()…ÁÀ¹ÁÕÐ œ½…Á¤½Á…ÉÑÌ¼é¥œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐì¹…µ”°…Ñ•½Éä°Í•É¥•Ì°±¥ÍÑ}ÁÉ¥”°å½ÕÉ}½ÍÐ°¹½Ñ•Ì°áÉ•˜ô€ôÉ•Ä¹‰½‘äì(€‘ˆ¹ÁÉ•Á…É” UAQÁ…ÉÑÌMP¹…µ”ôü°…Ñ•½Éäôü°Í•É¥•Ìôü°±¥ÍÑ}ÁÉ¥”ôü°å½ÕÉ}½ÍÐôü°¹½Ñ•Ìôü°áÉ•˜ôü°ÕÁ‘…Ñ•‘}…Ðõ‘…Ñ•Ñ¥µ” ‰¹½Üˆ¤]!I¥ôüœ¤(€€€€¹ÉÕ¸¡¹…µ”°…Ñ•½Éä°Í•É¥•Ì°±¥ÍÑ}ÁÉ¥”°å½ÕÉ}½ÍÐ°¹½Ñ•Ì°)M=8¹ÍÑÉ¥¹¥™ä¡áÉ•˜ñðmt¤°É•Ä¹Á…É…µÌ¹¥¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì()…ÁÀ¹‘•±•Ñ” œ½…Á¤½Á…ÉÑÌ¼é¥œ°€¡É•Ä°É•Ì¤€ôøì(€‘ˆ¹ÁÉ•Á…É” 1QI=4Á…ÉÑÌ]!I¥€ô€üœ¤¹ÉÕ¸¡É•Ä¹Á…É…µÌ¹¥¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì((¼¼¥±Ñ•È½ÁÑ¥½¹Ì)…ÁÀ¹•Ð œ½…Á¤½Á…ÉÑÌ½µ•Ñ„½™¥±Ñ•ÉÌœ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐ…Ñ•½É¥•Ì€ô‘ˆ¹ÁÉ•Á…É” M1P%MQ%9P…Ñ•½ÉäI=4Á…ÉÑÌ]!I…Ñ•½Éä€„ô€ˆˆ=IH	d…Ñ•½Éäœ¤¹…±° ¤¹µ…À¡È€ôøÈ¹…Ñ•½Éä¤ì(€½¹ÍÐÍ•É¥•Ì€ô‘ˆ¹ÁÉ•Á…É” M1P%MQ%9PÍ•É¥•ÌI=4Á…ÉÑÌ]!IÍ•É¥•Ì€„ô€ˆˆ=IH	dÍ•É¥•Ìœ¤¹…±° ¤¹µ…À¡È€ôøÈ¹Í•É¥•Ì¤ì(€½¹ÍÐÅÕ½Ñ•Ì€ô‘ˆ¹ÁÉ•Á…É” M1P%MQ%9PÅÕ½Ñ•}¹Õ´I=4Á…ÉÑÌ]!IÅÕ½Ñ•}¹Õ´%L9=P9U10=IH	dÅÕ½Ñ•}¹Õ´M1%5%P€ÌÀœ¤¹…±° ¤¹µ…À¡È€ôøÈ¹ÅÕ½Ñ•}¹Õ´¤ì(€É•Ì¹©Í½¸¡ì…Ñ•½É¥•Ì°Í•É¥•Ì°ÅÕ½Ñ•Ìô¤ì)ô¤ì((¼¼5…¹Õ…±Ì)…ÁÀ¹•Ð œ½…Á¤½µ…¹Õ…±Ìœ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐìÄô€ôÉ•Ä¹ÅÕ•Éäì(€±•ÐÍÅ°€ô€M1P€¨I=4µ…¹Õ…±Ì]!I€ÄôÄœì(€½¹ÍÐÁ…É…µÌ€ômtì(€¥˜€¡Ä¤ìÍÅ°€¬ô€œ9€¡Ñ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ð1%-€ü¤œì½¹ÍÐ±¥­”€ô€”‘íÅô•€ìÁ…É…µÌ¹ÁÕÍ ¡±¥­”±±¥­”±±¥­”¤ìô(€ÍÅ°€¬ô€œ=IH	d‘…Ñ”M°É•…Ñ•‘}…ÐMœì(€½¹ÍÐÉ½ÝÌ€ô‘ˆ¹ÁÉ•Á…É”¡ÍÅ°¤¹…±° ¸¸¹Á…É…µÌ¤ì(€É•Ì¹©Í½¸¡É½ÝÌ¹µ…À¡È€ôø€¡ì€¸¸¹È°µ½‘•±Ìè)M=8¹Á…ÉÍ”¡È¹µ½‘•±Ìñð€mtœ¤ô¤¤¤ì)ô¤ì()…ÁÀ¹‘•±•Ñ” œ½…Á¤½µ…¹Õ…±Ì¼é¥œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐµ…¹Õ…°€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!I¥€ô€üœ¤¹•Ð¡É•Ä¹Á…É…µÌ¹¥¤ì(€¥˜€¡µ…¹Õ…°€˜˜µ…¹Õ…°¹™¥±•¹…µ”¤ì(€€€½¹ÍÐ™À€ôÁ…Ñ ¹©½¥¸¡UA1=M}%H°µ…¹Õ…°¹™¥±•¹…µ”¤ì(€€€¥˜€¡™Ì¹•á¥ÍÑÍMå¹Œ¡™À¤¤™Ì¹Õ¹±¥¹­Må¹Œ¡™À¤ì(€ô(€‘ˆ¹ÁÉ•Á…É” 1QI=4µ…¹Õ…±Ì]!I¥€ô€üœ¤¹ÉÕ¸¡É•Ä¹Á…É…µÌ¹¥¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì((¼¼5…¹Õ…°ÕÁ±½…•¹‘Á½¥¹Ð)…ÁÀ¹Á½ÍÐ œ½…Á¤½µ…¹Õ…±Ì½ÕÁ±½…œ°ÕÁ±½…¹…ÉÉ…ä Á‘™Ìœ°€ÈÀ¤°…Íå¹Œ€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐÉ•ÍÕ±ÑÌ€ômtì(€™½È€¡½¹ÍÐ™¥±”½˜É•Ä¹™¥±•Ìñðmt¤ì(€€€ÑÉäì(€€€€€½¹ÍÐÁ‘™	Õ™™•È€ô™Ì¹É•…‘¥±•Må¹Œ¡™¥±”¹Á…Ñ ¤ì(€€€€€±•ÐÁ‘™Q•áÐ€ô€œœ°Á…•Ì€ô€Àì(€€€€€ÑÉäì½¹ÍÐÀ€ô…Ý…¥ÐÁ‘™A…ÉÍ”¡Á‘™	Õ™™•È¤ìÁ‘™Q•áÐ€ôÀ¹Ñ•áÐìÁ…•Ì€ôÀ¹¹ÕµÁ…•Ììô…Ñ ¡”¤íô(€€€€€½¹ÍÐµ½‘•±Ì€ô•áÑÉ…Ñ5½‘•±ÍÉ½µQ•áÐ¡Á‘™Q•áÐ€¬€œ€œ€¬™¥±”¹½É¥¥¹…±¹…µ”¤ì(€€€€€½¹ÍÐÑ¥Ñ±”€ô€¡É•Ä¹‰½‘ä¹Ñ¥Ñ±”ñð™¥±”¹½É¥¥¹…±¹…µ”¤¹É•Á±…” ½p¹qÜ¬¼°€œœ¤¹É•Á±…” ½|½œ°€œ€œ¤ì(€€€€€½¹ÍÐ¥€ôÕÁ±½…‘|‘í…Ñ”¹¹½Ü ¥õ|‘í5…Ñ ¹É…¹‘½´ ¤¹Ñ½MÑÉ¥¹œ ÌØ¤¹Í±¥” È¥õ€ì(€€€€€‘ˆ¹ÁÉ•Á…É” %9MIP%9Q<µ…¹Õ…±Ì€¡¥°Ñ¥Ñ±”°µ½‘•±Ì°™¥±•¹…µ”°™¥±•Á…Ñ °™¥±•}Í¥é”°Á…•Ì°Í½ÕÉ•}ÍÕ‰©•Ð°‘…Ñ”°ÕÁ±½…‘•‘}‰ä¤Y1UL€ ü°ü°ü°ü°ü°ü°ü°ü±‘…Ñ•Ñ¥µ” ‰¹½Üˆ¤°‰µ…¹Õ…°ˆ¤œ¤(€€€€€€€€¹ÉÕ¸¡¥°Ñ¥Ñ±”°)M=8¹ÍÑÉ¥¹¥™ä¡µ½‘•±Ì¤°™¥±”¹™¥±•¹…µ”°€½ÕÁ±½…‘Ì¼‘í™¥±”¹™¥±•¹…µ•õ€°™¥±”¹Í¥é”°Á…•Ì°™¥±”¹½É¥¥¹…±¹…µ”¤ì((€€€€€€¼¼áÑÉ…ÐÁ…ÉÑÌ™É½´ÕÁ±½…‘•A(€€€€€½¹ÍÐÁ…ÉÑÌ€ô•áÑÉ…ÑA…ÉÑÍÉ½µQ•áÐ¡Á‘™Q•áÐ°¹Õ±°°¹•Ü…Ñ” ¤¹Ñ½%M=MÑÉ¥¹œ ¤¹ÍÁ±¥Ð Pœ¥lÁt¤ì(€€€€€½¹ÍÐ¥¹Ì€ô‘ˆ¹ÑÉ…¹Í…Ñ¥½¸  ¤€ôøì(€€€€€€€™½È€¡½¹ÍÐÀ½˜Á…ÉÑÌ¤‘ˆ¹ÁÉ•Á…É” %9MIP=H%9=I%9Q<Á…ÉÑÌ€¡¥±Á…ÉÑ}¹Õ´±¹…µ”±…Ñ•½Éä±Í•É¥•Ì±±¥ÍÑ}ÁÉ¥”±å½ÕÉ}½ÍÐ±¹½Ñ•Ì±áÉ•˜±ÍÕÁÁ±¥•È¤Y1UL€ ü°ü°ü°ü°ü°ü°ü°ü°ü°ü¤œ¤¹ÉÕ¸¡À¹¥±À¹Á…ÉÑ}¹Õ´±À¹¹…µ”±À¹…Ñ•½Éä±À¹Í•É¥•Ì±À¹±¥ÍÑ}ÁÉ¥”±À¹å½ÕÉ}½ÍÐ±À¹¹½Ñ•Ì±À¹áÉ•˜°%¹•ÉÍ½±°I…¹œ¤ì(€€€€€ô¤ì(€€€€€¥¹Ì ¤ì(€€€€€É•ÍÕ±ÑÌ¹ÁÕÍ ¡ì½¬èÑÉÕ”°¥°Ñ¥Ñ±”°µ½‘•±Ì°Á…ÉÑÌèÁ…ÉÑÌ¹±•¹Ñ °Á…•Ìô¤ì(€€€ô…Ñ ¡”¤ì(€€€€€É•ÍÕ±ÑÌ¹ÁÕÍ ¡ì½¬è™…±Í”°™¥±•¹…µ”è™¥±”¹½É¥¥¹…±¹…µ”°•ÉÉ½Èè”¹µ•ÍÍ…”ô¤ì(€€€ô(€ô(€É•Ì¹©Í½¸¡É•ÍÕ±ÑÌ¤ì)ô¤ì((¼¼M•…É …É½ÍÌ‰½Ñ )…ÁÀ¹•Ð œ½…Á¤½Í•…É œ°€¡É•Ä°É•Ì¤€ôøì(€½¹ÍÐìÄô€ôÉ•Ä¹ÅÕ•Éäì(€¥˜€ …Ä¤É•ÑÕÉ¸É•Ì¹©Í½¸¡ìÁ…ÉÑÌèmt°µ…¹Õ…±Ìèmtô¤ì(€½¹ÍÐ±¥­”€ô€”‘íÅô•€ì(€½¹ÍÐÁ…ÉÑÌ€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4Á…ÉÑÌ]!IÁ…ÉÑ}¹Õ´1%-€ü=H¹…µ”1%-€ü=H¹½Ñ•Ì1%-€ü=HáÉ•˜1%-€ü1%5%P€ÔÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°áÉ•˜è)M=8¹Á…ÉÍ”¡È¹áÉ•˜ñð€mtœ¤ô¤¤ì(€½¹ÍÐµ…¹Õ…±Ì€ô‘ˆ¹ÁÉ•Á…É” M1P€¨I=4µ…¹Õ…±Ì]!IÑ¥Ñ±”1%-€ü=Hµ½‘•±Ì1%-€ü=HÍ½ÕÉ•}ÍÕ‰©•Ð1%-€ü1%5%P€ÈÀœ¤¹…±°¡±¥­”±±¥­”±±¥­”¤(€€€€¹µ…À¡È€ôø€¡ì€¸¸¹È°µ½‘•±Ìè)M=8¹Á…ÉÍ”¡È¹µ½‘•±Ìñð€mtœ¤ô¤¤ì(€É•Ì¹©Í½¸¡ìÁ…ÉÑÌ°µ…¹Õ…±Ìô¤ì)ô¤ì((¼¼ÕÑ ÍÑ…ÑÕÌ)…ÁÀ¹•Ð œ½…Á¤½…ÕÑ ½ÍÑ…ÑÕÌœ°€¡É•Ä°É•Ì¤€ôøì(€É•Ì¹©Í½¸¡ì½¹¹•Ñ•è€„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¤°•áÁ¥Éäè•ÑM•ÑÑ¥¹œ µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ô¤ì)ô¤ì()…ÁÀ¹Á½ÍÐ œ½…Á¤½…ÕÑ ½‘¥Í½¹¹•Ðœ°€¡É•Ä°É•Ì¤€ôøì(€‘ˆ¹ÁÉ•Á…É” ‰1QI=4Í•ÑÑ¥¹Ì]!I­•ä%8€ µ…¥±}…•ÍÍ}Ñ½­•¸œ°µ…¥±}É•™É•Í¡}Ñ½­•¸œ°µ…¥±}Ñ½­•¹}•áÁ¥Éäœ¤ˆ¤¹ÉÕ¸ ¤ì(€É•Ì¹©Í½¸¡ì½¬èÑÉÕ”ô¤ì)ô¤ì((¼¼€´´MQIP€´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´´)…ÁÀ¹±¥ÍÑ•¸¡A=IP°€ ¤€ôøì(€½¹Í½±”¹±½œ¡q»Â~RÐ5%HA…ÉÑÌQ½½°ÉÕ¹¹¥¹œ½¸¡ÑÑÀè¼½±½…±¡½ÍÐè‘íA=IQõ€¤ì(€½¹Í½±”¹±½œ¡€€€µ…¥°½¹¹•Ñ•è€‘ì„…•ÑM•ÑÑ¥¹œ µ…¥±}…•ÍÍ}Ñ½­•¸œ¥õ€¤ì(€½¹Í½±”¹±½œ¡€€€A…ÉÑÌ¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4Á…ÉÑÌœ¤¹•Ð ¤¹õ€¤ì(€½¹Í½±”¹±½œ¡€€€5…¹Õ…±Ì¥¸è€‘í‘ˆ¹ÁÉ•Á…É” M1P=U9P ¨¤…ÌŒI=4µ…¹Õ…±Ìœ¤¹•Ð ¤¹õq¹€¤ì)ô¤ì(
