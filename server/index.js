@@ -70,6 +70,20 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_manuals_models ON manuals(models);
 `);
 
+// -- MIGRATIONS (safe ALTER TABLE for any missing columns) ----------------
+const migrations = [
+  "ALTER TABLE parts ADD COLUMN supplier TEXT DEFAULT 'Ingersoll Rand'",
+  "ALTER TABLE parts ADD COLUMN xref TEXT DEFAULT '[]'",
+  "ALTER TABLE parts ADD COLUMN notes TEXT",
+  "ALTER TABLE parts ADD COLUMN source_email_id TEXT",
+  "ALTER TABLE manuals ADD COLUMN source_email_id TEXT",
+  "ALTER TABLE manuals ADD COLUMN source_subject TEXT",
+  "ALTER TABLE manuals ADD COLUMN uploaded_by TEXT DEFAULT 'system'",
+];
+for (const sql of migrations) {
+  try { db.exec(sql); } catch(e) { /* column already exists, ignore */ }
+}
+
 // -- MIDDLEWARE ------------------------------------------------------------
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
@@ -387,7 +401,7 @@ async function runGmailSync() {
       query = `label:${irLabel.id}`;
     } else {
       log('Label not found -- using keyword search', 'warn');
-      query = 'from:ingersollrand OR subject:(CTS) OR subject:(ingersoll rand) OR subject:(IR quote)';
+      query = 'from:ingersollrand OI subject:(CTS) OR subject:(ingersoll rand) OR subject:(IR quote)';
     }
 
     // Get message list
