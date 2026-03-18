@@ -391,7 +391,7 @@ async function runGmailSync() {
     }
 
     // Get message list
-    syncProgress&sub = 'Loading email list...';
+    syncProgress.sub = 'Loading email list...';
     let messages = [];
     let pageToken = null;
     do {
